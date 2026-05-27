@@ -1,0 +1,4366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Gas Fireplace · Full System · Prime Chimney Experts</title>
+<style>
+  *,*::before,*::after { box-sizing:border-box; }
+  html,body { margin:0; padding:0; height:100%; background:#000; color:#f3f0eb; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; overflow:hidden; }
+  #c { width:100vw; height:100vh; display:block; }
+  .panel { position:fixed; background:rgba(8,6,5,.78); backdrop-filter:blur(12px) saturate(1.2); -webkit-backdrop-filter:blur(12px) saturate(1.2); border:1px solid rgba(243,240,235,.12); color:#f3f0eb; font-size:12px; line-height:1.6; z-index:10; }
+  #info { top:14px; right:14px; padding:14px 18px; max-width:340px; }
+  #info h1 { margin:0 0 8px; font-size:13px; color:#C72B2B; letter-spacing:.16em; text-transform:uppercase; font-weight:700; }
+  #info .stat { color:#aaa; font-size:11px; }
+  #info b { color:#fff; font-weight:600; }
+  #info .v { color:#C72B2B; font-weight:700; }
+  /* Bottom keyboard-hint strip — small and centered ABOVE the toolbar */
+  #ctrls { bottom:62px; left:50%; transform:translateX(-50%); padding:6px 14px; font-size:10px; color:#bbb; letter-spacing:.08em; opacity:.7; }
+  #ctrls span { margin:0 8px; }
+  #ctrls kbd { background:rgba(255,255,255,.1); padding:1px 5px; font-family:inherit; font-size:10px; }
+  /* Top-LEFT preset views (Hero / 3/4 / Front / …) */
+  #presets { top:14px; left:14px; padding:10px; display:flex; flex-direction:column; gap:4px; }
+  #presets button, #toolbar button { background:rgba(255,255,255,.06); border:1px solid rgba(243,240,235,.14); color:#f3f0eb; font-family:inherit; font-size:10px; padding:6px 12px; cursor:pointer; letter-spacing:.1em; text-transform:uppercase; transition:.15s; font-weight:600; white-space:nowrap; }
+  #presets button:hover, #toolbar button:hover { background:#C72B2B; border-color:#C72B2B; }
+  #presets button.active { background:#C72B2B; border-color:#C72B2B; }
+  /* Bottom-CENTER horizontal toolbar — single row, no wrapping */
+  #toolbar { bottom:14px; left:50%; transform:translateX(-50%); padding:8px 10px; display:flex; flex-direction:row; gap:4px; max-width:96vw; flex-wrap:nowrap; justify-content:center; }
+  #toolbar button { padding:6px 10px; font-size:10px; }
+  #fps { bottom:14px; left:14px; padding:6px 10px; font-family:ui-monospace,monospace; font-size:10px; }
+  #fps span { color:#aef; }
+
+  /* Prime Chimney Experts brand watermark — subtle but always present */
+  #brand-watermark {
+    position:fixed; bottom:14px; left:14px;
+    display:flex; align-items:center; gap:8px;
+    padding:7px 11px;
+    background:rgba(8,6,5,.55); backdrop-filter:blur(10px) saturate(1.2);
+    -webkit-backdrop-filter:blur(10px) saturate(1.2);
+    border:1px solid rgba(199,43,43,.35);
+    color:#f3f0eb; text-decoration:none;
+    font-family:inherit; z-index:30;
+    transition:opacity .2s, border-color .2s, background .2s;
+    opacity:.78;
+  }
+  #brand-watermark:hover { opacity:1; border-color:#C72B2B; background:rgba(8,6,5,.78); }
+  #brand-watermark .bw-mark { color:#C72B2B; font-size:14px; line-height:1; }
+  #brand-watermark .bw-text { display:flex; flex-direction:column; line-height:1.15; }
+  #brand-watermark b {
+    color:#fff; font-weight:700; font-size:10px;
+    letter-spacing:.14em; text-transform:uppercase;
+  }
+  #brand-watermark .bw-sub {
+    color:rgba(243,240,235,.6); font-size:9px;
+    letter-spacing:.08em; text-transform:uppercase; margin-top:1px;
+  }
+  /* When the service-cta panel is open we still want it close to the X-Ray panel
+     (the user just clicked one of those buttons), so anchor it at LEFT, BELOW xray. */
+  #service-cta { right:14px; bottom:90px; max-width:340px; box-shadow:0 8px 24px rgba(0,0,0,.45); }
+  #service-cta .sc-btn { transition:.15s; }
+  #service-cta .sc-btn:hover { background:#C72B2B !important; border-color:#C72B2B !important; color:#fff !important; }
+  #loading { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; background:radial-gradient(ellipse at center, #1a0e08 0%, #050505 80%); z-index:50; color:#f3f0eb; font-size:14px; gap:18px; }
+
+  /* Anatomical labels (CSS2D) - only shown when cross-section is on */
+  #labels-layer { position:fixed; inset:0; pointer-events:none; z-index:5; }
+  .anat-label {
+    background:rgba(8,6,5,.85);
+    border:1px solid #C72B2B;
+    border-left-width:3px;
+    color:#fff;
+    padding:4px 10px;
+    font-size:10px;
+    font-weight:600;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    white-space:nowrap;
+    transform:translate(-50%, -50%);
+    font-family:-apple-system,sans-serif;
+    box-shadow:0 4px 14px rgba(0,0,0,.5);
+    pointer-events:auto;
+    cursor:default;
+  }
+  .anat-label::before {
+    content:'';
+    position:absolute;
+    left:-9px;
+    top:50%;
+    width:6px;
+    height:6px;
+    background:#C72B2B;
+    border-radius:50%;
+    transform:translateY(-50%);
+  }
+  .anat-label .he { color:#C72B2B; font-size:9px; display:block; margin-top:1px; }
+
+  /* X-ray part selector panel */
+  #xray-panel {
+    /* Top-RIGHT side, fully open — presets stays on the left, X-Ray moves right
+       so the panels don't collide with each other. */
+    top: 14px; right: 14px;
+    padding: 10px;
+    display: flex; flex-direction: column; gap: 2px;
+    min-width: 160px;
+  }
+  #xray-panel button { padding: 5px 10px; font-size: 10px; text-align: center; direction: ltr; }
+  #presets button, #toolbar button { text-align: center; direction: ltr; }
+  #xray-panel .xray-title {
+    font-size: 10px; color: #C72B2B; letter-spacing: .18em;
+    margin-bottom: 8px; font-weight: 700; text-transform: uppercase;
+    padding-bottom: 8px; border-bottom: 1px solid rgba(243,240,235,.12);
+    text-align: center;
+    width: 100%;
+  }
+  #xray-panel button {
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(243,240,235,.12);
+    color: #f3f0eb;
+    font-family: inherit; font-size: 10px;
+    padding: 5px 9px; text-align: center; direction: ltr;
+    cursor: pointer; letter-spacing: .04em;
+    transition: .12s; font-weight: 500;
+  }
+  #xray-panel button:hover { background: rgba(199,43,43,.4); border-color: #C72B2B; }
+  #xray-panel button.active { background: #C72B2B; border-color: #C72B2B; color: #fff; font-weight: 700; }
+  #xray-panel button.reset { margin-bottom: 6px; background: rgba(199,43,43,.18); border-color: #C72B2B; color: #fff; font-weight: 700; }
+  #loading .spinner { width:48px; height:48px; border:2px solid #2a1a10; border-top-color:#C72B2B; border-radius:50%; animation:spin 1s linear infinite; }
+  #loading .stage { color:#888; font-size:11px; letter-spacing:.2em; text-transform:uppercase; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="loading">
+  <div class="spinner"></div>
+  <div>Loading interactive 3D chimney model…</div>
+  <div class="stage" id="loading-stage">PBR · HDR · CINEMATIC v3.1</div>
+</div>
+<canvas id="c"></canvas>
+
+<div class="panel" id="info">
+  <h1>Gas Fireplace <span class="v">GAS v1</span></h1>
+  <div style="font-size:12px; color:#f3f0eb; margin-bottom:8px;">Gas Log Set · Full real-world system</div>
+  <div class="stat">
+    <div>Geometry: <b id="geom-stat">…</b></div>
+    <div>Materials: <b>10 PBR</b></div>
+    <div>Scene: <b>Room w/ floor + back wall</b></div>
+    <div>Postprocess: <b>Bloom + SSAO + SMAA</b></div>
+  </div>
+  <div class="stat" style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(243,240,235,.12);">
+    <b style="color:#C72B2B">Full Interior Anatomy</b><br>
+    <span style="color:#fff">Click ✂ Cross-section to reveal:</span>
+    <div>· <b>7 clay flue tiles</b> stacked vertically</div>
+    <div>· <b>Stainless liner</b> + insulation inside the flue</div>
+    <div>· <b>Corbeled smoke chamber</b> (6 brick courses)</div>
+    <div>· Cast iron damper (open) + handle</div>
+    <div>· Steel angle iron lintel</div>
+    <div>· Ash pit + cleanout door + foundation</div>
+    <div>· Smoke shelf + roof flashing</div>
+  </div>
+</div>
+
+<!-- MODE SELECTOR (top-center) — Wood vs Gas -->
+<div class="panel" id="mode-panel" style="top:14px; left:50%; transform:translateX(-50%); padding:6px 10px; display:flex; gap:2px;">
+  <button id="m-wood" data-mode="wood" class="active" style="background:#C72B2B; border:1px solid #C72B2B; color:#fff; font-size:11px; padding:7px 14px; cursor:pointer; letter-spacing:.08em; font-weight:700;">🪵 WOOD</button>
+  <button id="m-gas"  data-mode="gas"  style="background:rgba(255,255,255,.06); border:1px solid rgba(243,240,235,.18); color:#f3f0eb; font-size:11px; padding:7px 14px; cursor:pointer; letter-spacing:.08em; font-weight:700;">🔥 GAS</button>
+</div>
+
+<div class="panel" id="presets">
+  <button data-preset="hero" class="active">Hero View</button>
+  <button data-preset="three-quarter">3/4 View</button>
+  <button data-preset="front">Front</button>
+  <button data-preset="firebox">Firebox</button>
+  <button data-preset="cap">Cap Detail</button>
+  <button data-preset="cinema">Cinematic</button>
+</div>
+
+<!-- SERVICE CTA PANEL (appears when a part is selected via X-Ray) -->
+<div class="panel" id="service-cta" style="display:none; bottom:80px; right:14px; max-width:340px; padding:14px 16px; border-color:#C72B2B; border-width:2px;">
+  <div style="font-size:11px; color:#C72B2B; text-transform:uppercase; letter-spacing:.1em; margin-bottom:4px;" id="sc-eyebrow">Selected Component</div>
+  <div style="font-size:15px; color:#fff; font-weight:700; margin-bottom:6px;" id="sc-title">—</div>
+  <div style="font-size:12px; color:#ddd; margin-bottom:10px; line-height:1.5;" id="sc-desc">—</div>
+  <div style="font-size:11px; color:#aaa; margin-bottom:4px; text-transform:uppercase; letter-spacing:.06em;">Common issues</div>
+  <div style="font-size:12px; color:#f3f0eb; margin-bottom:10px;" id="sc-issues">—</div>
+  <div style="display:flex; gap:6px; flex-wrap:wrap;">
+    <a id="sc-book"      href="/contact-us" target="_top" class="sc-btn" style="flex:1; min-width:90px; text-align:center; padding:8px 10px; background:#C72B2B; color:#fff; text-decoration:none; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;">Book Service</a>
+    <a id="sc-quote"     href="/pricing"    target="_top" class="sc-btn" style="flex:1; min-width:90px; text-align:center; padding:8px 10px; background:rgba(255,255,255,.08); color:#fff; text-decoration:none; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; border:1px solid rgba(243,240,235,.18);">Get Quote</a>
+    <a id="sc-learn"     href="/anatomy"    target="_top" class="sc-btn" style="flex:1; min-width:90px; text-align:center; padding:8px 10px; background:rgba(255,255,255,.08); color:#fff; text-decoration:none; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; border:1px solid rgba(243,240,235,.18);">Learn More</a>
+  </div>
+  <button id="sc-close" style="position:absolute; top:8px; right:8px; background:rgba(255,255,255,.08); border:1px solid rgba(243,240,235,.18); color:#f3f0eb; width:22px; height:22px; cursor:pointer; padding:0; font-size:13px; line-height:1;">×</button>
+</div>
+
+<div class="panel" id="toolbar">
+  <button id="t-rotate">Auto-rotate</button>
+  <button id="t-section">✂ Cross-section</button>
+  <button id="t-fire" class="active">Fire ON</button>
+  <button id="t-bloom" class="active">Bloom</button>
+  <button id="t-ssao" class="active">SSAO</button>
+  <button id="t-fullscreen">Fullscreen</button>
+</div>
+
+<div class="panel" id="ctrls">
+  <span><kbd>Drag</kbd> rotate</span>
+  <span><kbd>Wheel</kbd> zoom</span>
+  <span><kbd>1-6</kbd> presets</span>
+  <span><kbd>R</kbd> rotate</span>
+  <span><kbd>F</kbd> fullscreen</span>
+</div>
+
+<div class="panel" id="fps"><span id="fps-val">--</span> fps</div>
+
+<!-- Brand watermark — visible in iframe + standalone. Subtle attribution that
+     this 3D model was custom-built for Prime Chimney Experts. -->
+<a id="brand-watermark" href="https://primechimneyexperts.com" target="_top" rel="noopener" title="Custom 3D model built for Prime Chimney Experts">
+  <span class="bw-mark">★</span>
+  <span class="bw-text">
+    <b>PRIME CHIMNEY EXPERTS</b>
+    <span class="bw-sub">Custom-built 3D model</span>
+  </span>
+</a>
+
+<div class="panel" id="xray-panel">
+  <div class="xray-title">X-Ray Mode</div>
+  <button class="reset" data-part="">All Parts</button>
+  <!-- ====== ORDERED TOP → BOTTOM by physical position in the chimney ====== -->
+
+  <!-- TOP: roof line + cap -->
+  <button data-part="cap">Custom Cap</button>
+  <button data-part="flashing">Roof Flashing</button>
+
+  <!-- Inside the chimney shaft, top→bottom -->
+  <button data-part="flueTiles">Clay Flue Tiles</button>
+  <button data-part="flueLiner">Stainless Liner</button>
+  <button data-part="body">Brick Body</button>
+  <button data-part="smokeChamber">Smoke Chamber</button>
+
+  <!-- Throat / damper area -->
+  <button data-part="damper" data-modes="wood">Cast Iron Damper</button>
+  <button data-part="damper" data-modes="gas">Damper (locked OPEN)</button>
+
+  <!-- Firebox header (above opening) -->
+  <button data-part="lintel">Steel Lintel</button>
+  <button data-part="mantle">Wood Mantle</button>
+
+  <!-- Inside the firebox -->
+  <button data-part="firebox">Firebox + Refractory</button>
+  <button data-part="fire" data-modes="wood">Fire + Wood Logs</button>
+  <button data-part="fire" data-modes="gas">Ceramic Logs + Flame</button>
+  <button data-part="grate"  data-modes="gas">Cast-Iron Log Grate</button>
+  <button data-part="burner" data-modes="gas">Burner Tube + Jets</button>
+  <button data-part="pilot"  data-modes="gas">Pilot + Thermocouple</button>
+
+  <!-- At hearth / floor level -->
+  <button data-part="hearth">Stone Hearth</button>
+  <button data-part="ashPit"   data-modes="wood">Ash Pit</button>
+  <button data-part="cleanout" data-modes="wood">Cleanout Door</button>
+
+  <!-- External plumbing (gas only) — to the side of the firebox -->
+  <button data-part="gasValve" data-modes="gas">Millivolt Gas Valve</button>
+  <button data-part="gasLine"  data-modes="gas">Gas Line + Ball Valve + CSST</button>
+
+  <!-- BOTTOM: deepest structural element -->
+  <button data-part="foundation">Concrete Foundation</button>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
+import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const setStage = (msg) => { const el = document.getElementById('loading-stage'); if (el) el.textContent = msg; };
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
+// Cap pixel ratio at 1.5 — barely visible difference on Retina but ~50% faster
+// per frame (4x fewer fragments on 2x → 1.5x). SMAA picks up the slack.
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;  // natural daylight exposure (was dim/cool)
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.localClippingEnabled = true;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x080605);
+scene.fog = new THREE.Fog(0x080605, 14, 28);
+
+const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
+const CAM_TARGET = new THREE.Vector3(0, -0.8, 0);
+camera.position.set(4.5, 0.2, 5.5);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.copy(CAM_TARGET);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.minDistance = 2;
+controls.maxDistance = 20;
+controls.maxPolarAngle = Math.PI * 0.51;
+
+setStage('LOADING HDR');
+const pmrem = new THREE.PMREMGenerator(renderer);
+pmrem.compileEquirectangularShader();
+new RGBELoader().load('/3d/hdr/env.hdr', (tex) => {
+  const env = pmrem.fromEquirectangular(tex).texture;
+  scene.environment = env;
+  tex.dispose(); pmrem.dispose();
+});
+
+// NATURAL DAYLIGHT — classic 3-zone setup: warm sun key, cool sky fill, soft bounce.
+// Mimics late-afternoon sunlight: golden key from one side, soft blue sky from above,
+// gentle warm bounce from the floor — same recipe most photo studios use for "natural".
+
+// Hemisphere: neutral-warm sky above, gentle warm ground bounce below.
+// (Pure cool sky was making everything look flat and clinical.)
+scene.add(new THREE.HemisphereLight(
+  0xcbd6e0,   // sky — very pale cool, like a hazy afternoon
+  0x4a3a30,   // ground — warm brown bounce from the floor
+  1.0,
+));
+
+// 3 soft area fills — slightly cooler than neutral, balance the warm key without
+// being overtly blue. Two front fills + one rear rim.
+const softLights = [
+  { color: 0xd8e0e8, pos: [ 5,  6,  5], intensity: 0.45 },  // front-right (cool fill)
+  { color: 0xd8e0e8, pos: [-5,  6,  5], intensity: 0.45 },  // front-left (cool fill)
+  { color: 0xc8d4dc, pos: [ 0,  5, -6], intensity: 0.35 },  // back rim (slightly cooler)
+];
+softLights.forEach(s => {
+  const l = new THREE.DirectionalLight(s.color, s.intensity);
+  l.position.set(...s.pos);
+  scene.add(l);
+});
+
+// X-RAY HIGHLIGHT LIGHT — follows the selected part to illuminate it brightly
+const xrayLight = new THREE.PointLight(0xfff5e0, 0, 4, 1.0);
+xrayLight.castShadow = false;
+scene.add(xrayLight);
+
+// KEY LIGHT — warm afternoon sun. Casts the primary shadow.
+// Slight golden tint (4500K ≈ #fff0d8) reads as natural daylight, not artificial.
+const keyLight = new THREE.DirectionalLight(0xfff0d8, 0.85);
+keyLight.position.set(4.5, 9, 5);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(1024, 1024);   // 1k shadow map — 4x faster than 2k, indistinguishable visually with PCF soft
+keyLight.shadow.camera.left = -7;
+keyLight.shadow.camera.right = 7;
+keyLight.shadow.camera.top = 8;
+keyLight.shadow.camera.bottom = -4;
+keyLight.shadow.bias = -0.0003;
+keyLight.shadow.radius = 4;       // softer shadow edges, more natural penumbra
+scene.add(keyLight);
+
+// (old duplicate keyLight + fillLight removed — replaced by uniform soft lighting above)
+
+const fireLight = new THREE.PointLight(0xff6028, 8, 8, 1.6);
+fireLight.position.set(0, -1.7, 0.4);
+// PointLight shadows render a 6-face cubemap EVERY frame — by far the biggest
+// per-frame cost. Disabling fire-light shadows is a 30-50% speedup and looks
+// nearly identical because the fire glow itself dominates the firebox area.
+fireLight.castShadow = false;
+scene.add(fireLight);
+
+setStage('LOADING PBR TEXTURES');
+const texLoader = new THREE.TextureLoader();
+function loadTex(path, sRGB = false, rep = [1, 1]) {
+  const t = texLoader.load(path);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(...rep); t.anisotropy = 16;
+  if (sRGB) t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+function makeBrickMat({ tint = '#ffffff', repeat = [1.5, 1.8], normalScale = 1.5, ao = 1.15 } = {}) {
+  return new THREE.MeshStandardMaterial({
+    map: loadTex('/3d/textures/brick_diff.jpg', true, repeat),
+    normalMap: loadTex('/3d/textures/brick_nor.jpg', false, repeat),
+    normalScale: new THREE.Vector2(normalScale, normalScale),
+    roughnessMap: loadTex('/3d/textures/brick_rough.jpg', false, repeat),
+    aoMap: loadTex('/3d/textures/brick_ao.jpg', false, repeat),
+    aoMapIntensity: ao, roughness: 1, metalness: 0, envMapIntensity: 0.6,
+    color: new THREE.Color(tint),
+  });
+}
+function makeConcreteMat({ tint = '#a89788', repeat = [2, 0.6] } = {}) {
+  return new THREE.MeshStandardMaterial({
+    map: loadTex('/3d/textures/concrete_diff.jpg', true, repeat),
+    normalMap: loadTex('/3d/textures/concrete_nor.jpg', false, repeat),
+    normalScale: new THREE.Vector2(0.9, 0.9),
+    roughnessMap: loadTex('/3d/textures/concrete_rough.jpg', false, repeat),
+    roughness: 0.95, metalness: 0, envMapIntensity: 0.55,
+    color: new THREE.Color(tint),
+  });
+}
+
+// Photoreal walnut wood texture — built per-pixel with layered fractal noise.
+// Captures: organic wavy grain (not straight stripes), tonal variation from sapwood
+// to heartwood, knots with concentric ring distortion, micro-grain noise. Returns
+// BOTH a color map AND a matching normal map for surface relief.
+function makeWoodTexture() {
+  const W = 1024, H = 512;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const c = cv.getContext('2d');
+  const img = c.createImageData(W, H);
+  const data = img.data;
+
+  // Hash-based pseudo-noise (deterministic per seed)
+  function hash(x, y) {
+    const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
+    return n - Math.floor(n);
+  }
+  // Smooth interpolated 2D value noise
+  function vnoise(x, y) {
+    const ix = Math.floor(x), iy = Math.floor(y);
+    const fx = x - ix, fy = y - iy;
+    const a = hash(ix,   iy);
+    const b = hash(ix+1, iy);
+    const c1= hash(ix,   iy+1);
+    const d = hash(ix+1, iy+1);
+    const sx = fx*fx*(3-2*fx), sy = fy*fy*(3-2*fy);
+    return a*(1-sx)*(1-sy) + b*sx*(1-sy) + c1*(1-sx)*sy + d*sx*sy;
+  }
+  // Fractional Brownian Motion (4 octaves) for organic noise
+  function fbm(x, y) {
+    let v = 0, a = 1, f = 1, total = 0;
+    for (let i = 0; i < 4; i++) {
+      v += vnoise(x * f, y * f) * a;
+      total += a;
+      a *= 0.5; f *= 2;
+    }
+    return v / total;
+  }
+
+  // Pre-place 5 knots (centers + radii) — their influence is added per-pixel
+  const knots = [];
+  for (let i = 0; i < 5; i++) {
+    knots.push({
+      cx: 60 + Math.random() * (W - 120),
+      cy: 50 + Math.random() * (H - 100),
+      r:  18 + Math.random() * 22,
+      ar: 0.55 + Math.random() * 0.25,  // aspect ratio
+      strength: 0.45 + Math.random() * 0.35,
+    });
+  }
+
+  // Walnut palette (linearly interpolated by grain strength)
+  // dark heartwood → mid → light sapwood streaks
+  const cDark = [22, 12, 5];     // deepest grain line
+  const cBase = [70, 42, 22];    // mid walnut tone
+  const cLite = [125, 80, 44];   // soft sapwood highlight
+  const cKnot = [10, 5, 2];      // knot core
+
+  for (let py = 0; py < H; py++) {
+    for (let px = 0; px < W; px++) {
+      // ---- WAVY GRAIN (vertical streaks distorted by 2 octaves of noise) ----
+      const warp = (fbm(px * 0.004, py * 0.020) - 0.5) * 90;
+      const wavePos = (px + warp) * 0.13;
+      // Two grain frequencies layered (coarse + fine)
+      const grainCoarse = Math.sin(wavePos) * 0.5 + 0.5;
+      const grainFine   = Math.sin(wavePos * 3.7 + fbm(px*0.02, py*0.06)*5) * 0.5 + 0.5;
+      // Sharpen the streaks — exponentiate to make dark grain lines crisp
+      const grain = Math.pow(grainCoarse, 1.6) * 0.7 + Math.pow(grainFine, 2.4) * 0.3;
+
+      // ---- TONAL BACKGROUND (large soft variation, sapwood streaks) ----
+      const tone = fbm(px * 0.0015, py * 0.004);
+
+      // ---- KNOT INFLUENCE ----
+      let knotFactor = 0;
+      let knotRingTwist = 0;
+      for (const k of knots) {
+        const dx = (px - k.cx);
+        const dy = (py - k.cy) / k.ar;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < k.r * 4) {
+          // Inside the knot core
+          if (dist < k.r) {
+            knotFactor = Math.max(knotFactor, k.strength * (1 - dist / k.r));
+          }
+          // Ring distortion AROUND the knot — pushes grain to curve around it
+          const angle = Math.atan2(dy, dx);
+          knotRingTwist += k.strength * Math.cos(dist * 0.4 - angle * 0) * (1 - dist / (k.r * 4)) * 0.4;
+        }
+      }
+      // Apply ring twist to grain (curves grain around knots)
+      const grainWithKnot = Math.max(0, Math.min(1, grain - knotRingTwist + Math.sin((py + warp * 0.5) * 0.04) * 0.04));
+
+      // ---- COMPOSITE COLOR ----
+      let r, g, b;
+      // Mix dark↔base by grain strength
+      const t1 = 1 - grainWithKnot;            // 0=light, 1=dark
+      r = cBase[0] + (cDark[0] - cBase[0]) * t1;
+      g = cBase[1] + (cDark[1] - cBase[1]) * t1;
+      b = cBase[2] + (cDark[2] - cBase[2]) * t1;
+      // Blend in lite highlight where tone is bright
+      const liteMix = Math.max(0, (tone - 0.55) * 1.8);
+      r += (cLite[0] - r) * liteMix * 0.5;
+      g += (cLite[1] - g) * liteMix * 0.5;
+      b += (cLite[2] - b) * liteMix * 0.5;
+      // Burn in knot
+      r += (cKnot[0] - r) * knotFactor;
+      g += (cKnot[1] - g) * knotFactor;
+      b += (cKnot[2] - b) * knotFactor;
+      // Micro fine grain noise
+      const micro = (hash(px * 1.3, py * 0.9) - 0.5) * 18;
+      r += micro; g += micro * 0.7; b += micro * 0.4;
+      // Clamp
+      r = Math.max(0, Math.min(255, r));
+      g = Math.max(0, Math.min(255, g));
+      b = Math.max(0, Math.min(255, b));
+
+      const idx = (py * W + px) * 4;
+      data[idx]   = r;
+      data[idx+1] = g;
+      data[idx+2] = b;
+      data[idx+3] = 255;
+    }
+  }
+  c.putImageData(img, 0, 0);
+
+  const tex = new THREE.CanvasTexture(cv);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(1, 1);
+  tex.anisotropy = 16;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+// Procedural normal map matching the wood grain (derived from luminance gradient).
+function makeWoodNormalMap(colorCanvas) {
+  // We can't easily access the colorCanvas here; instead generate a coarse normal
+  // map with subtle wavy ridges that broadly match the grain direction.
+  const W = 1024, H = 512;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const c = cv.getContext('2d');
+  const img = c.createImageData(W, H);
+  const data = img.data;
+  function hash(x, y) { const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5; return n - Math.floor(n); }
+  function vnoise(x, y) {
+    const ix = Math.floor(x), iy = Math.floor(y);
+    const fx = x - ix, fy = y - iy;
+    const a = hash(ix, iy), b = hash(ix+1, iy), cc = hash(ix, iy+1), d = hash(ix+1, iy+1);
+    const sx = fx*fx*(3-2*fx), sy = fy*fy*(3-2*fy);
+    return a*(1-sx)*(1-sy) + b*sx*(1-sy) + cc*(1-sx)*sy + d*sx*sy;
+  }
+  for (let py = 0; py < H; py++) {
+    for (let px = 0; px < W; px++) {
+      const warp = (vnoise(px * 0.004, py * 0.020) - 0.5) * 90;
+      const wave = Math.sin((px + warp) * 0.13);
+      // Normal map RGB: (nx*0.5+0.5, ny*0.5+0.5, nz)
+      // We want streaks of horizontal-grain bumps → encode primary normal Y direction
+      const nx = wave * 0.25;
+      const ny = (vnoise(px * 0.05, py * 0.05) - 0.5) * 0.3;
+      const nz = 1;
+      const len = Math.sqrt(nx*nx + ny*ny + nz*nz);
+      const idx = (py * W + px) * 4;
+      data[idx]   = (nx/len * 0.5 + 0.5) * 255;
+      data[idx+1] = (ny/len * 0.5 + 0.5) * 255;
+      data[idx+2] = (nz/len * 0.5 + 0.5) * 255;
+      data[idx+3] = 255;
+    }
+  }
+  c.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(cv);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = 16;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  return tex;
+}
+
+// Wood mantle material — uses REAL photographic hardwood textures (three.js examples
+// hardwood2 set: diffuse, normal/bump, roughness). Falls back gracefully if not loaded.
+function makeWoodMantleMat() {
+  return new THREE.MeshStandardMaterial({
+    map:           loadTex('./3d/textures/wood_diff.jpg', true,  [2.5, 1.0]),
+    normalMap:     loadTex('./3d/textures/wood_nor.jpg',  false, [2.5, 1.0], /*isNormal*/ true),
+    normalScale:   new THREE.Vector2(0.7, 0.7),
+    roughnessMap:  loadTex('./3d/textures/wood_rough.jpg', false, [2.5, 1.0]),
+    // DARK ESPRESSO WALNUT — much darker than the warm-tan bricks, creates a clear
+    // visual separation between the wood mantle and the brick face it sits against.
+    color:         new THREE.Color('#2a1408'),
+    roughness:     0.65,
+    metalness:     0,
+    envMapIntensity: 0.5,
+  });
+}
+
+const MAT = {
+  brickFront:    makeBrickMat({ tint: '#c08868', repeat: [1.4, 1.8] }),
+  brickJamb:     makeBrickMat({ tint: '#6a4030', repeat: [0.6, 1.6], normalScale: 1.7 }),  // heat-stained
+  brickBody:     makeBrickMat({ tint: '#b88060', repeat: [1.4, 5.5] }),  // tall shaft: more vertical courses
+  brickAged:     makeBrickMat({ tint: '#a87555', repeat: [1.6, 2.0] }),
+  // Brick variants matched to the body shaft scale (~0.92 units/row, ~1.36 units/col)
+  // so they don't look squished when applied to short fill panels.
+  brickFill:     makeBrickMat({ tint: '#b88060', repeat: [0.7, 1.9] }),   // back-fill panel (1.0 × 1.7)
+  brickKick:     makeBrickMat({ tint: '#b88060', repeat: [0.7, 0.5] }),   // bottom kickplate (1.0 × 0.45)
+  concrete:      makeConcreteMat({ tint: '#a89888' }),
+  concreteDark:  makeConcreteMat({ tint: '#857668' }),
+  stoneTan:      makeConcreteMat({ tint: '#cdb89a', repeat: [1.5, 0.4] }),  // brighter warm cream stone
+  stoneDark:     makeConcreteMat({ tint: '#5a4438', repeat: [1.5, 0.4] }),  // darker walnut-brown contrast
+  woodFloor:     new THREE.MeshStandardMaterial({ color: '#3a2614', roughness: 0.65, metalness: 0, envMapIntensity: 0.4 }),
+  woodMantle:    makeWoodMantleMat(),
+  wallPaint:     new THREE.MeshStandardMaterial({ color: '#bba88c', roughness: 0.92, metalness: 0, envMapIntensity: 0.3 }),
+  stainless:     new THREE.MeshStandardMaterial({ color: '#cfcfd0', roughness: 0.22, metalness: 0.95, envMapIntensity: 1.7 }),
+  stainlessDark: new THREE.MeshStandardMaterial({ color: '#56565a', roughness: 0.4, metalness: 0.9, envMapIntensity: 1.8 }),
+  stainlessAged: new THREE.MeshStandardMaterial({ color: '#888a8c', roughness: 0.35, metalness: 0.88, envMapIntensity: 2.0 }),
+  refractory:    new THREE.MeshStandardMaterial({ color: '#3a2418', roughness: 1, metalness: 0, envMapIntensity: 0.25, emissive: '#1a0a04', emissiveIntensity: 0.25 }),
+  emissive:      new THREE.MeshStandardMaterial({ color: '#ff5520', emissive: '#ff3010', emissiveIntensity: 2.5, roughness: 0.5 }),
+};
+
+setStage('BUILDING SCENE');
+const root = new THREE.Group();
+scene.add(root);
+
+// X-ray part tagging — every mesh gets userData.part = currentPart at creation
+let currentPart = null;
+
+function box(w, h, d, mat, pos, opts = {}) {
+  const geo = new THREE.BoxGeometry(w, h, d);
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(...pos);
+  m.castShadow = opts.cast !== false;
+  m.receiveShadow = opts.receive !== false;
+  if (opts.rotation) m.rotation.set(...opts.rotation);
+  m.userData.part = opts.part || currentPart;
+  root.add(m);
+  return m;
+}
+function cyl(r, h, mat, pos, sections = 24, opts = {}) {
+  const geo = new THREE.CylinderGeometry(opts.rTop ?? r, r, h, sections);
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(...pos);
+  m.castShadow = opts.cast !== false;
+  m.receiveShadow = opts.receive !== false;
+  if (opts.rotation) m.rotation.set(...opts.rotation);
+  m.userData.part = opts.part || currentPart;
+  root.add(m);
+  return m;
+}
+
+currentPart = 'room';
+// ============== ROOM CONTEXT ==============
+// Wood floor (extends well past the fireplace into the room)
+const floorMat = MAT.woodFloor.clone();
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(20, 14, 60, 30),
+  floorMat
+);
+floor.rotation.x = -Math.PI/2;
+floor.position.set(0, -2.55, 1.5);
+floor.receiveShadow = true;
+scene.add(floor);
+
+// Back wall (behind the chimney, painted off-white)
+const backWall = new THREE.Mesh(
+  new THREE.PlaneGeometry(20, 12),
+  MAT.wallPaint
+);
+backWall.position.set(0, 3.5, -1.0);
+backWall.receiveShadow = true;
+scene.add(backWall);
+
+currentPart = 'hearth';
+// ============== HEARTH (extends forward into room) ==============
+box(2.6, 0.22, 1.55, MAT.stoneTan, [0, -2.43, 0.4]);  // main slab
+box(2.65, 0.27, 0.09, MAT.stoneDark, [0, -2.41, 1.15]); // bullnose front edge
+box(2.65, 0.04, 1.55, MAT.stoneDark, [0, -2.32, 0.4], { receive: true, cast: false }); // top dark layer (creates 2-tone)
+
+currentPart = 'body';
+// ============== UNIFIED BRICK MASS — single material everywhere ==============
+// Real chimneys are ONE continuous brick mass with the firebox opening cut OUT.
+// We approximate that with 2 jambs (left/right of opening) using the SAME material
+// as the body shaft. The "header above opening" becomes part of the unified shaft.
+// All same color, same texture orientation = no visible seam.
+
+// Left jamb (left of firebox opening) — extends all the way DOWN to floor (no floating)
+box(0.45, 1.7, 1.0, MAT.brickBody, [-0.725, -1.70, 0]);
+// Right jamb — same
+box(0.45, 1.7, 1.0, MAT.brickBody, [ 0.725, -1.70, 0]);
+
+// BRICK KICKPLATE — fills the gap BELOW the firebox floor (between jambs, in front of ash pit)
+// Spans from floor up to firebox floor base, between the two jambs.
+// Uses brickKick (matched UV scale) so the bricks read the same size as the surrounding shaft.
+box(1.0, 0.45, 1.0, MAT.brickKick, [0, -2.32, 0]);
+
+// FULL BRICK BACK WALL — closes the entire back behind the firebox area
+// Spans full height between the jambs (y=-2.55 to -0.85), full width (x=-0.5 to +0.5),
+// sits at the back face of the chimney mass (z=-0.50 to -0.40). Visible from behind
+// (no hole), and from front it sits BEHIND the refractory firebox interior.
+// Uses brickFill (matched UV scale) so its bricks blend with the body shaft above.
+box(1.0, 1.7, 0.10, MAT.brickFill, [0, -1.70, -0.45]);
+
+currentPart = 'lintel';
+// Stone lintel (thick stone slab forming the visual lintel band under the header)
+box(1.5, 0.16, 0.32, MAT.stoneTan, [0, -0.93, 0.4]);
+box(1.45, 0.04, 0.34, MAT.stoneDark, [0, -1.01, 0.41]);
+
+// Arched voussoir bricks visible above the lintel (decorative — same material as body for unity)
+for (let i = 0; i < 13; i++) {
+  const angle = Math.PI * (i + 0.5) / 13;
+  const archR = 0.55;
+  const bx = Math.cos(angle) * (archR + 0.06);
+  const by = -0.85 + Math.sin(angle) * (archR + 0.06) * 0.6; // flattened arch
+  const v = new THREE.Mesh(
+    new THREE.BoxGeometry(0.085, 0.13, 0.08),
+    MAT.brickBody
+  );
+  v.position.set(bx, by, 0.45);
+  v.rotation.z = (angle - Math.PI/2) * 0.7;
+  v.castShadow = v.receiveShadow = true;
+  root.add(v);
+}
+
+currentPart = 'firebox';
+// Firebox INTERIOR (visible through the open front)
+// Floor (firebrick)
+box(1.1, 0.06, 1.0, MAT.refractory, [0, -2.10, 0.05]);
+// Side walls (interior)
+box(0.04, 1.0, 0.95, MAT.refractory, [-0.50, -1.55, 0.05]);
+box(0.04, 1.0, 0.95, MAT.refractory, [ 0.50, -1.55, 0.05]);
+// Back wall (interior)
+box(1.05, 1.0, 0.04, MAT.refractory, [0, -1.55, -0.40]);
+// Top ceiling of firebox (slopes back — represents the smoke chamber bottom)
+box(1.05, 0.04, 0.95, MAT.refractory, [0, -1.05, 0.05]);
+
+currentPart = 'damper';
+// Damper visible at throat (subtle stainless plate)
+const damper = new THREE.Mesh(
+  new THREE.BoxGeometry(0.85, 0.025, 0.4),
+  MAT.stainlessDark
+);
+damper.position.set(0, -1.10, -0.05);
+damper.rotation.x = Math.PI / 8;
+damper.castShadow = damper.receiveShadow = true;
+damper.userData.part = 'damper';
+root.add(damper);
+
+currentPart = 'firebox';
+// Firebrick floor tiles (visible through opening)
+const tileGeo = new THREE.BoxGeometry(0.15, 0.03, 0.15);
+for (let i = 0; i < 6; i++) {
+  for (let j = 0; j < 6; j++) {
+    const tx = -0.42 + i * 0.17;
+    const tz = -0.35 + j * 0.17;
+    const tile = new THREE.Mesh(tileGeo, MAT.refractory.clone());
+    tile.material.color.setRGB(
+      0.32 + (Math.random() - 0.5) * 0.06,
+      0.18 + (Math.random() - 0.5) * 0.04,
+      0.10 + (Math.random() - 0.5) * 0.03
+    );
+    tile.position.set(tx, -2.06, tz);
+    tile.castShadow = tile.receiveShadow = true;
+    tile.userData.part = 'firebox';
+    root.add(tile);
+  }
+}
+
+currentPart = 'fire';
+// ============== PHOTOREAL FIREWOOD ==============
+// 1. Procedural bark CanvasTexture — vertical ridges + horizontal cracks + char + ember spots
+function makeBarkTexture() {
+  const cv = document.createElement('canvas');
+  cv.width = 512; cv.height = 256;
+  const c = cv.getContext('2d');
+  // Base dark brown bark
+  c.fillStyle = '#1a0e06';
+  c.fillRect(0, 0, 512, 256);
+  // Vertical bark ridges (slightly varied light/dark stripes)
+  for (let i = 0; i < 70; i++) {
+    const x = Math.random() * 512;
+    const w = 3 + Math.random() * 9;
+    const h = 60 + Math.random() * 196;
+    const y = Math.random() * (256 - h);
+    const L = 24 + Math.random() * 40;
+    c.fillStyle = `rgb(${L+10},${L-1},${L-7})`;
+    c.fillRect(x, y, w, h);
+  }
+  // Horizontal bark cracks (thin dark lines)
+  for (let i = 0; i < 22; i++) {
+    const y = Math.random() * 256;
+    c.fillStyle = '#000';
+    c.fillRect(0, y, 512, 1 + Math.random() * 2);
+  }
+  // Charred dark patches
+  for (let i = 0; i < 30; i++) {
+    const x = Math.random() * 512;
+    const y = Math.random() * 256;
+    const r = 4 + Math.random() * 12;
+    c.fillStyle = `rgba(0,0,0,${0.4 + Math.random() * 0.5})`;
+    c.beginPath(); c.arc(x, y, r, 0, Math.PI*2); c.fill();
+  }
+  // Glowing ember spots (subtle orange highlights)
+  for (let i = 0; i < 28; i++) {
+    const x = Math.random() * 512;
+    const y = Math.random() * 256;
+    const r = 1 + Math.random() * 3;
+    c.fillStyle = `rgba(255,${80 + Math.random()*60},20,${0.5 + Math.random()*0.4})`;
+    c.beginPath(); c.arc(x, y, r, 0, Math.PI*2); c.fill();
+  }
+  const tex = new THREE.CanvasTexture(cv);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(2, 1);
+  return tex;
+}
+const BARK_TEX = makeBarkTexture();
+
+// 2. Wood-grain end caps (concentric rings: bark / wood / heartwood)
+function makeWoodEnd(r) {
+  const grp = new THREE.Group();
+  // Outer dark bark ring
+  const outer = new THREE.Mesh(
+    new THREE.CircleGeometry(r, 18),
+    new THREE.MeshStandardMaterial({ color: 0x4a2a14, roughness: 0.95, metalness: 0 })
+  );
+  outer.rotation.x = -Math.PI / 2;
+  grp.add(outer);
+  // Sapwood (lighter tan ring)
+  const sap = new THREE.Mesh(
+    new THREE.CircleGeometry(r * 0.85, 18),
+    new THREE.MeshStandardMaterial({ color: 0xc89058, roughness: 0.88, metalness: 0 })
+  );
+  sap.rotation.x = -Math.PI / 2;
+  sap.position.y = 0.001;
+  grp.add(sap);
+  // Heartwood (darker center)
+  const heart = new THREE.Mesh(
+    new THREE.CircleGeometry(r * 0.40, 14),
+    new THREE.MeshStandardMaterial({ color: 0x8c5828, roughness: 0.9, metalness: 0 })
+  );
+  heart.rotation.x = -Math.PI / 2;
+  heart.position.y = 0.002;
+  grp.add(heart);
+  // Tiny core (very dark center pith)
+  const pith = new THREE.Mesh(
+    new THREE.CircleGeometry(r * 0.10, 10),
+    new THREE.MeshStandardMaterial({ color: 0x2a1810, roughness: 1, metalness: 0 })
+  );
+  pith.rotation.x = -Math.PI / 2;
+  pith.position.y = 0.003;
+  grp.add(pith);
+  // 2-3 radial cracks from center to edge
+  for (let i = 0; i < 3; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const crack = new THREE.Mesh(
+      new THREE.PlaneGeometry(r * 0.85, r * 0.025),
+      new THREE.MeshStandardMaterial({ color: 0x0a0402, roughness: 1, metalness: 0 })
+    );
+    crack.rotation.x = -Math.PI / 2;
+    crack.rotation.z = angle;
+    crack.position.y = 0.004;
+    crack.position.x = Math.cos(angle) * r * 0.4;
+    crack.position.z = Math.sin(angle) * r * 0.4;
+    grp.add(crack);
+  }
+  return grp;
+}
+
+// 3. Build a single log (tapered cylinder + bark + 2 wood end caps)
+function buildLog({ pos, len, r, rot, taper = 1.06 }) {
+  const group = new THREE.Group();
+  // Tapered cylinder body — one end slightly thicker (natural log)
+  const bodyMat = new THREE.MeshStandardMaterial({
+    map: BARK_TEX, color: 0x6a4828, roughness: 0.94, metalness: 0,
+    emissive: 0xff2010, emissiveIntensity: 0.25 + Math.random() * 0.25,
+  });
+  const body = new THREE.Mesh(
+    new THREE.CylinderGeometry(r, r * taper, len, 18, 1), bodyMat
+  );
+  body.castShadow = body.receiveShadow = true;
+  body.userData.part = 'fire';
+  group.add(body);
+  // End caps at both ends
+  const capTop = makeWoodEnd(r);
+  capTop.position.y = len/2 + 0.002;
+  capTop.traverse(o => { if (o.isMesh) o.userData.part = 'fire'; });
+  group.add(capTop);
+  const capBot = makeWoodEnd(r * taper);
+  capBot.position.y = -len/2 - 0.002;
+  capBot.rotation.x = Math.PI;  // flip to face outward
+  capBot.traverse(o => { if (o.isMesh) o.userData.part = 'fire'; });
+  group.add(capBot);
+  // Apply orientation + position to whole group
+  if (rot) group.rotation.set(...rot);
+  group.position.set(...pos);
+  group.userData.part = 'fire';
+  root.add(group);
+  return body;
+}
+
+// 4. ARRANGEMENT — classic firewood stack: 2 parallel bottom + 1 perpendicular cross + 2 angled top
+// Stack heights computed from coal bed top y≈-2.13
+// Bottom logs: 2 parallel, oriented FRONT-BACK (cylinder axis along Z) — we see their cut ends from front
+const log1 = buildLog({ pos: [-0.18, -2.00, 0.18], len: 0.58, r: 0.108, rot: [Math.PI/2, 0, 0.04], taper: 1.07 });
+const log2 = buildLog({ pos: [ 0.20, -2.00, 0.20], len: 0.56, r: 0.112, rot: [Math.PI/2, 0, -0.03], taper: 1.05 });
+// Middle log: perpendicular cross, oriented LEFT-RIGHT (cylinder axis along X) — bark side visible
+const log3 = buildLog({ pos: [ 0.00, -1.82, 0.20], len: 0.62, r: 0.098, rot: [0, Math.PI/26, Math.PI/2], taper: 1.08 });
+// Top logs: 2 angled (mostly left-right but tilted in opposite directions)
+const log4 = buildLog({ pos: [-0.10, -1.66, 0.16], len: 0.50, r: 0.088, rot: [0.10, Math.PI/10, Math.PI/2], taper: 1.06 });
+const log5 = buildLog({ pos: [ 0.10, -1.66, 0.24], len: 0.50, r: 0.088, rot: [-0.10, -Math.PI/10, Math.PI/2], taper: 1.06 });
+
+// ============== GLOWING COAL BED (cluster of pulsing emissive spheres under logs) ==============
+const coalGroup = new THREE.Group();
+coalGroup.userData.part = 'fire';
+const coals = [];
+for (let i = 0; i < 24; i++) {
+  const coalMat = new THREE.MeshStandardMaterial({
+    color: 0x1a0604, roughness: 1, metalness: 0,
+    emissive: 0xff3818, emissiveIntensity: 1.8 + Math.random() * 1.5,
+  });
+  const r = 0.04 + Math.random() * 0.05;
+  const coal = new THREE.Mesh(new THREE.SphereGeometry(r, 8, 6), coalMat);
+  const angle = Math.random() * Math.PI * 2;
+  const dist = Math.random() * 0.4;
+  coal.position.set(Math.cos(angle) * dist, -2.16 + Math.random() * 0.03, 0.20 + Math.sin(angle) * dist * 0.6);
+  coal.userData.part = 'fire';
+  coal.userData.pulseBase = coal.material.emissiveIntensity;
+  coal.userData.pulseSeed = Math.random() * 10;
+  coals.push(coal);
+  coalGroup.add(coal);
+}
+root.add(coalGroup);
+
+// ============================================================================
+// =============== GAS FIREPLACE SYSTEM (additive — wood base intact) =========
+// ============================================================================
+// Real components a gas-log set requires. Each part tagged for X-ray.
+
+const _matStainless = new THREE.MeshStandardMaterial({ color: '#a8aab0', roughness: 0.32, metalness: 0.88, envMapIntensity: 0.7 });
+const _matStainlessDark = new THREE.MeshStandardMaterial({ color: '#5a5a5e', roughness: 0.45, metalness: 0.7, envMapIntensity: 0.5 });
+const _matBlackIron = new THREE.MeshStandardMaterial({ color: '#161616', roughness: 0.6, metalness: 0.35 });
+const _matBrass = new THREE.MeshStandardMaterial({ color: '#c08838', roughness: 0.3, metalness: 0.85, envMapIntensity: 0.7 });
+const _matRed = new THREE.MeshStandardMaterial({ color: '#b62020', roughness: 0.5, metalness: 0.15, emissive: '#2a0808', emissiveIntensity: 0.15 });
+const _matCSST = new THREE.MeshStandardMaterial({ color: '#d4b418', roughness: 0.55, metalness: 0.45 });
+const _matCastIron = new THREE.MeshStandardMaterial({ color: '#1c1c1f', roughness: 0.78, metalness: 0.35, envMapIntensity: 0.4 });
+
+// ====================================================================
+//  1. BURNER ASSEMBLY  —  full stainless tube burner with all parts
+//     Mimics a real RH Peterson or Realfyre H-burner:
+//       • Drip pan (collects condensate + rocks)
+//       • Main horizontal burner tube (5/8" stainless)
+//       • End caps (welded)
+//       • Air mixer venturi (where gas + air combine before tube)
+//       • Air shutter (adjustable collar with numbered scale)
+//       • Brass orifice spud (hex flats for wrench)
+//       • Pipe union nut (connects orifice to mixer)
+//       • Manifold inlet pipe (short stub coming up from valve)
+//       • 22 drilled jet ports (2 rows along the top)
+//       • Front secondary air baffle (deflector for clean flame)
+//       • Burner support brackets (2× attaches tube to pan)
+// ====================================================================
+currentPart = 'burner';
+const BURNER_Y = -2.10, BURNER_LEN = 0.78, BURNER_R = 0.022;
+const BURNER_Z = 0.12;
+
+// --- A. Drip pan (catches condensate, holds rocks) ---
+const burnerPan = new THREE.Mesh(
+  new THREE.BoxGeometry(BURNER_LEN + 0.04, 0.018, 0.44), _matStainlessDark,
+);
+burnerPan.position.set(0, BURNER_Y - 0.022, BURNER_Z);
+burnerPan.castShadow = burnerPan.receiveShadow = true;
+burnerPan.userData.part = 'burner';
+root.add(burnerPan);
+// Pan rim (low lip)
+for (const side of ['L', 'R', 'F', 'B']) {
+  const isLR = side === 'L' || side === 'R';
+  const len = isLR ? 0.44 : BURNER_LEN + 0.04;
+  const sgn = (side === 'L' || side === 'B') ? -1 : 1;
+  const rim = new THREE.Mesh(
+    new THREE.BoxGeometry(isLR ? 0.010 : len, 0.014, isLR ? len : 0.010), _matStainlessDark,
+  );
+  if (isLR) rim.position.set(sgn * (BURNER_LEN/2 + 0.02), BURNER_Y - 0.010, BURNER_Z);
+  else       rim.position.set(0, BURNER_Y - 0.010, BURNER_Z + sgn * 0.22);
+  rim.userData.part = 'burner';
+  root.add(rim);
+}
+
+// --- B. Main burner tube (5/8" stainless) ---
+const burnerTube = new THREE.Mesh(
+  new THREE.CylinderGeometry(BURNER_R, BURNER_R, BURNER_LEN, 20), _matStainless,
+);
+burnerTube.position.set(0, BURNER_Y, BURNER_Z);
+burnerTube.rotation.z = Math.PI / 2;
+burnerTube.castShadow = burnerTube.receiveShadow = true;
+burnerTube.userData.part = 'burner';
+root.add(burnerTube);
+// End caps (welded shut at both ends)
+for (const ex of [-BURNER_LEN/2 - 0.005, BURNER_LEN/2 + 0.005]) {
+  const cap = new THREE.Mesh(
+    new THREE.CylinderGeometry(BURNER_R + 0.003, BURNER_R + 0.003, 0.012, 14), _matStainlessDark,
+  );
+  cap.position.set(ex, BURNER_Y, BURNER_Z);
+  cap.rotation.z = Math.PI / 2;
+  cap.userData.part = 'burner';
+  root.add(cap);
+}
+
+// --- C. Air mixer venturi (bell-shaped expansion just inside the inlet) ---
+const venturi = new THREE.Mesh(
+  new THREE.CylinderGeometry(BURNER_R + 0.010, BURNER_R, 0.04, 16), _matStainless,
+);
+venturi.position.set(BURNER_LEN/2 + 0.040, BURNER_Y, BURNER_Z);
+venturi.rotation.z = -Math.PI / 2;
+venturi.userData.part = 'burner';
+root.add(venturi);
+
+// --- D. Adjustable air shutter (collar with numbered scale slot) ---
+const airShutter = new THREE.Mesh(
+  new THREE.CylinderGeometry(BURNER_R + 0.014, BURNER_R + 0.014, 0.06, 16), _matBrass,
+);
+airShutter.position.set(BURNER_LEN/2 + 0.075, BURNER_Y, BURNER_Z);
+airShutter.rotation.z = Math.PI / 2;
+airShutter.userData.part = 'burner';
+root.add(airShutter);
+// Adjustment slot in shutter (5 graduation marks)
+for (let i = 0; i < 5; i++) {
+  const mark = new THREE.Mesh(
+    new THREE.BoxGeometry(0.002, 0.003, 0.006),
+    new THREE.MeshStandardMaterial({ color: '#3a2a10', roughness: 0.7, metalness: 0.3 }),
+  );
+  mark.position.set(BURNER_LEN/2 + 0.075 + (i - 2) * 0.010, BURNER_Y + BURNER_R + 0.015, BURNER_Z);
+  mark.userData.part = 'burner';
+  root.add(mark);
+}
+// Air intake holes on the shutter (4 small drilled holes)
+for (let i = 0; i < 4; i++) {
+  const angle = i * Math.PI / 2;
+  const ax = BURNER_LEN/2 + 0.075;
+  const ay = BURNER_Y + Math.cos(angle) * (BURNER_R + 0.014);
+  const az = BURNER_Z + Math.sin(angle) * (BURNER_R + 0.014);
+  const hole = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.004, 0.004, 0.005, 8),
+    new THREE.MeshStandardMaterial({ color: '#0a0a0a', roughness: 0.9 }),
+  );
+  hole.position.set(ax, ay, az);
+  hole.rotation.set(angle * (Math.PI/2 < angle ? -1 : 1), 0, Math.PI / 2);
+  hole.userData.part = 'burner';
+  root.add(hole);
+}
+
+// --- E. Brass orifice spud with hex flats (the actual gas jet) ---
+const orifice = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.011, 0.013, 0.020, 6),   // 6 sides = hex
+  _matBrass,
+);
+orifice.position.set(BURNER_LEN/2 + 0.115, BURNER_Y, BURNER_Z);
+orifice.rotation.z = Math.PI / 2;
+orifice.userData.part = 'burner';
+root.add(orifice);
+// Outer thread on orifice (suggestion via slightly larger collar)
+const orificeThread = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.014, 0.014, 0.012, 12), _matBrass,
+);
+orificeThread.position.set(BURNER_LEN/2 + 0.131, BURNER_Y, BURNER_Z);
+orificeThread.rotation.z = Math.PI / 2;
+orificeThread.userData.part = 'burner';
+root.add(orificeThread);
+// Pipe union nut (large hex nut after orifice)
+const unionNut = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.018, 0.018, 0.024, 6), _matBrass,
+);
+unionNut.position.set(BURNER_LEN/2 + 0.150, BURNER_Y, BURNER_Z);
+unionNut.rotation.z = Math.PI / 2;
+unionNut.userData.part = 'burner';
+root.add(unionNut);
+
+// --- F. Manifold inlet pipe (short black-iron stub from valve to orifice) ---
+const manifoldStub = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.016, 0.016, 0.12, 12), _matBlackIron,
+);
+manifoldStub.position.set(BURNER_LEN/2 + 0.222, BURNER_Y, BURNER_Z);
+manifoldStub.rotation.z = Math.PI / 2;
+manifoldStub.userData.part = 'burner';
+root.add(manifoldStub);
+
+// --- G. 22 drilled jet ports (2 rows × 11 along the top of the tube) ---
+const _jetMat = new THREE.MeshStandardMaterial({
+  color: '#0d0d0e', roughness: 0.55, metalness: 0.55,
+  emissive: '#ff8030', emissiveIntensity: 0.55,
+});
+const gasJets = [];
+for (let row = 0; row < 2; row++) {
+  const angleOff = row === 0 ? -0.35 : 0.35;
+  for (let i = 0; i < 11; i++) {
+    const jx = -BURNER_LEN/2 + 0.06 + i * ((BURNER_LEN - 0.12) / 10);
+    const jet = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.005, 0.006, 0.009, 8), _jetMat.clone(),
+    );
+    jet.position.set(
+      jx,
+      BURNER_Y + Math.cos(angleOff) * BURNER_R,
+      BURNER_Z + Math.sin(angleOff) * BURNER_R,
+    );
+    jet.rotation.x = -angleOff;
+    jet.userData.part = 'burner';
+    jet.userData.jetGlowSeed = Math.random() * 10;
+    gasJets.push(jet);
+    root.add(jet);
+  }
+}
+
+// --- H. Front secondary air baffle (small angled deflector ahead of the jets) ---
+const airBaffle = new THREE.Mesh(
+  new THREE.BoxGeometry(BURNER_LEN - 0.08, 0.003, 0.04), _matStainlessDark,
+);
+airBaffle.position.set(0, BURNER_Y + 0.012, BURNER_Z + 0.05);
+airBaffle.rotation.x = -Math.PI / 6;
+airBaffle.userData.part = 'burner';
+root.add(airBaffle);
+
+// --- I. 2 burner support brackets (attach tube to pan) ---
+for (const sx of [-0.25, 0.25]) {
+  const bracket = new THREE.Mesh(
+    new THREE.BoxGeometry(0.025, 0.030, 0.020), _matStainlessDark,
+  );
+  bracket.position.set(sx, BURNER_Y - 0.012, BURNER_Z);
+  bracket.userData.part = 'burner';
+  root.add(bracket);
+  // Bolt securing bracket to pan
+  const bolt = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.004, 0.004, 0.012, 6), _matStainlessDark,
+  );
+  bolt.position.set(sx, BURNER_Y - 0.022, BURNER_Z);
+  bolt.userData.part = 'burner';
+  root.add(bolt);
+}
+
+// ====================================================================
+//  2. CAST IRON LOG GRATE  —  full Vestal-style basket cradle
+//     A real fireplace grate isn't just a box of bars; it's a BASKET
+//     with curved arms, a bowed front, a tall back wall, scrollwork,
+//     cross-braces, and an ember tray. Built piece-by-piece below.
+// ====================================================================
+currentPart = 'grate';
+const GRATE_Y_BASE = BURNER_Y + 0.04;
+const GRATE_W      = 0.84;                    // a touch wider than burner
+const GRATE_D      = 0.46;
+const GRATE_BED_Y  = GRATE_Y_BASE + 0.085;    // where logs rest
+const GRATE_ARM_Y  = GRATE_BED_Y  + 0.16;     // top of the side arms
+const GRATE_BACK_Y = GRATE_BED_Y  + 0.26;     // top of the back wall (taller)
+const GRATE_Z_C    = 0.12;                    // depth-center of the grate
+
+// Cast iron with subtle patina variation (each piece can clone + tint)
+function matIron(tint = '#1c1c1f', rough = 0.78) {
+  return new THREE.MeshStandardMaterial({ color: tint, roughness: rough, metalness: 0.4, envMapIntensity: 0.45 });
+}
+const MAT_IRON = matIron();
+
+// ---- A. EMBER TRAY (flat cast iron pan under the bed — catches embers) ----
+const emberTray = new THREE.Mesh(
+  new THREE.BoxGeometry(GRATE_W + 0.04, 0.015, GRATE_D + 0.04), matIron('#171719', 0.85)
+);
+emberTray.position.set(0, GRATE_Y_BASE - 0.02, GRATE_Z_C);
+emberTray.castShadow = emberTray.receiveShadow = true;
+emberTray.userData.part = 'grate';
+root.add(emberTray);
+// Tray rim (low lip around the pan)
+for (const side of ['front', 'back', 'left', 'right']) {
+  const isLR = side === 'left' || side === 'right';
+  const len = isLR ? GRATE_D + 0.04 : GRATE_W + 0.04;
+  const sgn = (side === 'left' || side === 'back') ? -1 : 1;
+  const rim = new THREE.Mesh(
+    new THREE.BoxGeometry(isLR ? 0.012 : len, 0.018, isLR ? len : 0.012), matIron('#171719', 0.85)
+  );
+  if (isLR) rim.position.set(sgn * (GRATE_W/2 + 0.02), GRATE_Y_BASE - 0.005, GRATE_Z_C);
+  else       rim.position.set(0, GRATE_Y_BASE - 0.005, GRATE_Z_C + sgn * (GRATE_D/2 + 0.02));
+  rim.userData.part = 'grate';
+  root.add(rim);
+}
+
+// ---- B. 4 LEGS with cabriole curve + ball-claw feet ----
+for (const sx of [-1, 1]) {
+  for (const sz of [-1, 1]) {
+    const lx = sx * (GRATE_W/2 - 0.04);
+    const lz = GRATE_Z_C + sz * (GRATE_D/2 - 0.04);
+    // Lower bulged segment (cabriole upper bulge)
+    const lowerLeg = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.020, 0.014, 0.08, 12), MAT_IRON
+    );
+    lowerLeg.position.set(lx, GRATE_Y_BASE + 0.02, lz);
+    lowerLeg.castShadow = lowerLeg.receiveShadow = true;
+    lowerLeg.userData.part = 'grate';
+    root.add(lowerLeg);
+    // Upper slim segment up to arm top
+    const upperLeg = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.013, 0.020, GRATE_ARM_Y - (GRATE_Y_BASE + 0.06), 12), MAT_IRON
+    );
+    upperLeg.position.set(lx, (GRATE_Y_BASE + 0.06 + GRATE_ARM_Y)/2, lz);
+    upperLeg.userData.part = 'grate';
+    root.add(upperLeg);
+    // Ball foot (the actual ground-contact ball)
+    const ballFoot = new THREE.Mesh(
+      new THREE.SphereGeometry(0.028, 14, 10), MAT_IRON
+    );
+    ballFoot.position.set(lx, GRATE_Y_BASE - 0.018, lz);
+    ballFoot.userData.part = 'grate';
+    root.add(ballFoot);
+    // Claw collar (small ring around the ball, where the "claw" grips it)
+    const clawCollar = new THREE.Mesh(
+      new THREE.TorusGeometry(0.022, 0.005, 6, 14), matIron('#262628', 0.6)
+    );
+    clawCollar.position.set(lx, GRATE_Y_BASE - 0.005, lz);
+    clawCollar.rotation.x = Math.PI / 2;
+    clawCollar.userData.part = 'grate';
+    root.add(clawCollar);
+    // Acorn finial at top of corner post
+    const finialBase = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.014, 0.018, 0.014, 12), MAT_IRON
+    );
+    finialBase.position.set(lx, GRATE_ARM_Y + 0.012, lz);
+    finialBase.userData.part = 'grate';
+    root.add(finialBase);
+    const finialTop = new THREE.Mesh(
+      new THREE.ConeGeometry(0.014, 0.026, 12), MAT_IRON
+    );
+    finialTop.position.set(lx, GRATE_ARM_Y + 0.038, lz);
+    finialTop.userData.part = 'grate';
+    root.add(finialTop);
+  }
+}
+
+// ---- C. BACK WALL (taller, fully slatted — like a real basket back) ----
+//   Vertical slats + horizontal frame top/bottom; mimics a wire-mesh back panel.
+for (let i = 0; i < 9; i++) {
+  const sx = -GRATE_W/2 + 0.07 + i * ((GRATE_W - 0.14) / 8);
+  const slat = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.008, 0.008, GRATE_BACK_Y - GRATE_BED_Y + 0.02, 8), MAT_IRON
+  );
+  slat.position.set(sx, (GRATE_BED_Y + GRATE_BACK_Y)/2, GRATE_Z_C - GRATE_D/2 + 0.015);
+  slat.userData.part = 'grate';
+  root.add(slat);
+}
+// Back top rail
+const backRailTop = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.013, 0.013, GRATE_W - 0.04, 12), matIron('#1c1c1f', 0.7)
+);
+backRailTop.position.set(0, GRATE_BACK_Y, GRATE_Z_C - GRATE_D/2 + 0.015);
+backRailTop.rotation.z = Math.PI / 2;
+backRailTop.userData.part = 'grate';
+root.add(backRailTop);
+// Decorative scroll bend at each top corner of the back wall
+for (const sx of [-1, 1]) {
+  const scroll = new THREE.Mesh(
+    new THREE.TorusGeometry(0.025, 0.007, 6, 16, Math.PI * 1.4), MAT_IRON
+  );
+  scroll.position.set(sx * (GRATE_W/2 - 0.06), GRATE_BACK_Y + 0.005, GRATE_Z_C - GRATE_D/2 + 0.015);
+  scroll.rotation.set(0, 0, sx * Math.PI / 2);
+  scroll.userData.part = 'grate';
+  root.add(scroll);
+}
+
+// ---- D. SIDE ARMS (curved basket sides, NOT straight vertical) ----
+//   Each side arm is a curved quarter-circle that rises from bed → arm top.
+//   Made of 3 stacked torus segments + a top rail running front-to-back.
+for (const sx of [-1, 1]) {
+  const armX = sx * (GRATE_W/2 - 0.03);
+  // Curved arc rising from front of bed to arm top — half torus laid sideways
+  const arcMain = new THREE.Mesh(
+    new THREE.TorusGeometry(0.13, 0.010, 8, 18, Math.PI),
+    MAT_IRON,
+  );
+  arcMain.position.set(armX, GRATE_BED_Y + 0.005, GRATE_Z_C);
+  arcMain.rotation.set(0, Math.PI / 2, 0);
+  arcMain.userData.part = 'grate';
+  root.add(arcMain);
+  // Top rail (front-to-back) connecting front/back corner posts
+  const topRail = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.011, 0.011, GRATE_D - 0.08, 10), MAT_IRON,
+  );
+  topRail.position.set(armX, GRATE_ARM_Y, GRATE_Z_C);
+  topRail.rotation.x = Math.PI / 2;
+  topRail.userData.part = 'grate';
+  root.add(topRail);
+  // 4 vertical rungs on each side (closer spacing than before)
+  for (let r = 0; r < 4; r++) {
+    const rungZ = GRATE_Z_C + (r - 1.5) * 0.10;
+    const rung = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.0075, 0.0075, GRATE_ARM_Y - GRATE_BED_Y, 8), MAT_IRON,
+    );
+    rung.position.set(armX, (GRATE_BED_Y + GRATE_ARM_Y)/2, rungZ);
+    rung.userData.part = 'grate';
+    root.add(rung);
+  }
+  // S-curl scroll mid-arm (decorative — a 270° torus arc on the outside)
+  const scroll = new THREE.Mesh(
+    new THREE.TorusGeometry(0.030, 0.006, 6, 16, Math.PI * 1.5),
+    matIron('#262628', 0.6),
+  );
+  scroll.position.set(sx * (GRATE_W/2 - 0.005), GRATE_BED_Y + 0.10, GRATE_Z_C);
+  scroll.rotation.set(0, Math.PI / 2, 0);
+  scroll.userData.part = 'grate';
+  root.add(scroll);
+}
+
+// ---- E. BOWED FRONT (curves out instead of flat) ----
+//   Front of the grate bows forward like a real Victorian fender. Made of
+//   9 short bars at progressively varied z (concave-out arc).
+function frontBowZ(t) {
+  // t in [0,1]; returns z offset (max bulge at t=0.5)
+  return GRATE_Z_C + GRATE_D/2 - 0.005 + Math.sin(t * Math.PI) * 0.035;
+}
+for (let i = 0; i < 9; i++) {
+  const t = i / 8;
+  const fx = -GRATE_W/2 + 0.06 + t * (GRATE_W - 0.12);
+  const fz = frontBowZ(t);
+  // Vertical bar
+  const bar = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.009, 0.009, GRATE_ARM_Y - GRATE_BED_Y + 0.04, 8), MAT_IRON
+  );
+  bar.position.set(fx, (GRATE_BED_Y + GRATE_ARM_Y)/2 + 0.02, fz);
+  bar.userData.part = 'grate';
+  root.add(bar);
+  // Tiny ball on top of every other bar (Victorian touch)
+  if (i % 2 === 0) {
+    const ball = new THREE.Mesh(
+      new THREE.SphereGeometry(0.012, 10, 8), MAT_IRON
+    );
+    ball.position.set(fx, GRATE_ARM_Y + 0.04, fz);
+    ball.userData.part = 'grate';
+    root.add(ball);
+  }
+}
+// Front bowed top rail — approximated as 4 short cylinder segments tracing the arc
+for (let i = 0; i < 4; i++) {
+  const t0 = i / 4, t1 = (i + 1) / 4;
+  const x0 = -GRATE_W/2 + 0.06 + t0 * (GRATE_W - 0.12);
+  const x1 = -GRATE_W/2 + 0.06 + t1 * (GRATE_W - 0.12);
+  const z0 = frontBowZ(t0);
+  const z1 = frontBowZ(t1);
+  const segLen = Math.hypot(x1 - x0, z1 - z0);
+  const segMidX = (x0 + x1) / 2;
+  const segMidZ = (z0 + z1) / 2;
+  const segAngle = Math.atan2(z1 - z0, x1 - x0);
+  const seg = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.011, 0.011, segLen, 10), MAT_IRON
+  );
+  seg.position.set(segMidX, GRATE_ARM_Y + 0.02, segMidZ);
+  seg.rotation.set(0, -segAngle, Math.PI / 2);
+  seg.userData.part = 'grate';
+  root.add(seg);
+}
+// Front bowed bottom rail (matches the top)
+for (let i = 0; i < 4; i++) {
+  const t0 = i / 4, t1 = (i + 1) / 4;
+  const x0 = -GRATE_W/2 + 0.06 + t0 * (GRATE_W - 0.12);
+  const x1 = -GRATE_W/2 + 0.06 + t1 * (GRATE_W - 0.12);
+  const z0 = frontBowZ(t0);
+  const z1 = frontBowZ(t1);
+  const segLen = Math.hypot(x1 - x0, z1 - z0);
+  const seg = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.011, 0.011, segLen, 10), MAT_IRON
+  );
+  seg.position.set((x0 + x1) / 2, GRATE_BED_Y - 0.005, (z0 + z1) / 2);
+  seg.rotation.set(0, -Math.atan2(z1 - z0, x1 - x0), Math.PI / 2);
+  seg.userData.part = 'grate';
+  root.add(seg);
+}
+
+// ---- F. BOTTOM BED  — 9 closely-spaced cross bars logs sit on ----
+for (let i = 0; i < 9; i++) {
+  const bx = -GRATE_W/2 + 0.06 + i * ((GRATE_W - 0.12) / 8);
+  const bar = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.013, 0.013, GRATE_D - 0.06, 12), MAT_IRON,
+  );
+  bar.position.set(bx, GRATE_BED_Y, GRATE_Z_C);
+  bar.rotation.x = Math.PI / 2;
+  bar.castShadow = bar.receiveShadow = true;
+  bar.userData.part = 'grate';
+  root.add(bar);
+}
+// Front + back bed rails (perpendicular to the cross bars, ties them together)
+for (const sz of [-1, 1]) {
+  const rail = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.012, 0.012, GRATE_W - 0.06, 10), MAT_IRON,
+  );
+  rail.position.set(0, GRATE_BED_Y, GRATE_Z_C + sz * (GRATE_D/2 - 0.03));
+  rail.rotation.z = Math.PI / 2;
+  rail.userData.part = 'grate';
+  root.add(rail);
+}
+
+// ---- G. UNDERSIDE X-BRACE  — diagonal cross brace under the bed ----
+for (const dir of [1, -1]) {
+  const braceLen = Math.hypot(GRATE_W - 0.08, GRATE_D - 0.06);
+  const brace = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.010, 0.010, braceLen, 10), MAT_IRON,
+  );
+  brace.position.set(0, GRATE_Y_BASE + 0.025, GRATE_Z_C);
+  brace.rotation.set(0, Math.atan2((GRATE_W - 0.08), (GRATE_D - 0.06)) * dir + Math.PI/2, Math.PI / 2);
+  brace.userData.part = 'grate';
+  root.add(brace);
+}
+// Center hub bolt where the X braces cross
+const xHub = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.016, 0.016, 0.014, 10), matIron('#363636', 0.5)
+);
+xHub.position.set(0, GRATE_Y_BASE + 0.032, GRATE_Z_C);
+xHub.userData.part = 'grate';
+root.add(xHub);
+
+// ---- H. MAKER'S PLATE  — small oval brand plate riveted to the back of the front rail ----
+const plate = new THREE.Mesh(
+  new THREE.BoxGeometry(0.10, 0.025, 0.003), matIron('#2a2a2c', 0.5)
+);
+plate.position.set(0, GRATE_BED_Y - 0.015, GRATE_Z_C + GRATE_D/2 - 0.005);
+plate.userData.part = 'grate';
+root.add(plate);
+// 4 rivet heads on the plate
+for (const dx of [-0.04, 0.04]) {
+  for (const dy of [-0.009, 0.009]) {
+    const rivet = new THREE.Mesh(
+      new THREE.SphereGeometry(0.0025, 6, 4), matIron('#3a3a3c', 0.4)
+    );
+    rivet.position.set(dx, GRATE_BED_Y - 0.015 + dy, GRATE_Z_C + GRATE_D/2 - 0.0035);
+    rivet.userData.part = 'grate';
+    root.add(rivet);
+  }
+}
+
+// Backward-compat for the ceramic log code below
+const GRATE_Y = GRATE_BED_Y;
+
+// ---- 2b. CERAMIC LOG SET (5 factory-shaped logs on the grate, NOT wood) ----
+// Tag the original WOOD logs as woodOnly (mode toggle controls their visibility).
+currentPart = 'fire';
+[log1, log2, log3, log4, log5].forEach(l => {
+  if (l && l.parent) {
+    l.parent.userData.woodOnly = true;
+    l.parent.traverse(c => { if (c.isMesh) c.userData.woodOnly = true; });
+  }
+});
+if (typeof coalGroup !== 'undefined') {
+  coalGroup.userData.woodOnly = true;
+  coalGroup.traverse(c => { if (c.isMesh) c.userData.woodOnly = true; });
+}
+
+function makeCeramicMat(charLevel = 0.4) {
+  // charLevel 0 = clean cream, 1 = sooty black
+  const r = Math.round(225 - charLevel * 150);
+  const g = Math.round(208 - charLevel * 150);
+  const b = Math.round(180 - charLevel * 150);
+  return new THREE.MeshStandardMaterial({
+    color: `rgb(${r},${g},${b})`,
+    roughness: 0.95, metalness: 0,
+  });
+}
+function buildCeramicLog({ pos, len, r, rot, char = 0.4 }) {
+  const grp = new THREE.Group();
+  // Body — slightly tapered, smooth cylinder
+  const body = new THREE.Mesh(
+    new THREE.CylinderGeometry(r * 0.94, r, len, 20, 1),
+    makeCeramicMat(char),
+  );
+  body.castShadow = body.receiveShadow = true;
+  body.userData.part = 'fire';
+  grp.add(body);
+  // End caps with darker char (charred firebrick look)
+  for (const dy of [len/2 + 0.001, -len/2 - 0.001]) {
+    const cap = new THREE.Mesh(
+      new THREE.CircleGeometry(r * (dy > 0 ? 0.94 : 1.0), 16),
+      makeCeramicMat(Math.min(1, char + 0.45)),
+    );
+    cap.position.y = dy;
+    cap.rotation.x = dy > 0 ? -Math.PI / 2 : Math.PI / 2;
+    cap.userData.part = 'fire';
+    grp.add(cap);
+  }
+  // 2-3 soot smudge rings around the log (darker sub-cylinders)
+  const smudgeMat = makeCeramicMat(Math.min(1, char + 0.55));
+  for (let i = 0; i < 2; i++) {
+    const smudgeY = (Math.random() - 0.5) * len * 0.7;
+    const smudge = new THREE.Mesh(
+      new THREE.CylinderGeometry(r * 1.01, r * 1.01, 0.025 + Math.random() * 0.03, 16, 1, true),
+      smudgeMat,
+    );
+    smudge.position.y = smudgeY;
+    smudge.userData.part = 'fire';
+    grp.add(smudge);
+  }
+  if (rot) grp.rotation.set(...rot);
+  grp.position.set(...pos);
+  grp.userData.part = 'fire';
+  root.add(grp);
+  return body;
+}
+// 5 ceramic logs sized to FIT INSIDE the grate cradle (no protruding through bars).
+// Grate side arms sit at x = ±0.39 → logs along X must be short enough that
+// their END + radius stays within that. Logs along Z (front-back) are fine since
+// the grate is 0.46 deep but logs are only ~0.16 wide.
+const CLOG_Y = GRATE_Y + 0.06;
+// Bottom pair — oriented FRONT-BACK (cylinder axis along Z, visible cut ends face viewer)
+buildCeramicLog({ pos: [-0.20, CLOG_Y,        0.05], len: 0.38, r: 0.080, rot: [Math.PI/2, 0,  0.04], char: 0.55 });
+buildCeramicLog({ pos: [ 0.20, CLOG_Y,        0.20], len: 0.38, r: 0.078, rot: [Math.PI/2, 0, -0.03], char: 0.50 });
+// Middle cross log — along X axis, sized to fit between the side arms (max ≈ 0.60)
+buildCeramicLog({ pos: [ 0.00, CLOG_Y + 0.10, 0.13], len: 0.56, r: 0.072, rot: [0,  Math.PI/26, Math.PI/2], char: 0.40 });
+// Top pair — along X axis, shortened so the ends stay INSIDE the grate side arms
+buildCeramicLog({ pos: [-0.08, CLOG_Y + 0.19, 0.06], len: 0.40, r: 0.060, rot: [0.08,  Math.PI/12, Math.PI/2], char: 0.30 });
+buildCeramicLog({ pos: [ 0.10, CLOG_Y + 0.19, 0.22], len: 0.38, r: 0.058, rot: [-0.06, -Math.PI/12, Math.PI/2], char: 0.30 });
+
+// ====================================================================
+//  3. PILOT ASSEMBLY  —  full standing-pilot + safety sensors
+//     Real assembly = bracket + pilot orifice (hex brass) + pilot hood +
+//     thermocouple (millivolt) + thermopile (separate, generates more mV) +
+//     spark electrode w/ ceramic insulator + pilot shield + wires routing.
+// ====================================================================
+currentPart = 'pilot';
+const PILOT_X = -BURNER_LEN/2 + 0.06;
+const PILOT_Y = BURNER_Y + 0.04;
+const PILOT_Z = 0.32;
+
+// --- Mounting bracket (L-shape bolted to burner pan) ---
+const pilotBracket = new THREE.Mesh(
+  new THREE.BoxGeometry(0.044, 0.11, 0.025), _matCastIron,
+);
+pilotBracket.position.set(PILOT_X, PILOT_Y - 0.01, PILOT_Z);
+pilotBracket.castShadow = pilotBracket.receiveShadow = true;
+pilotBracket.userData.part = 'pilot';
+root.add(pilotBracket);
+// Bracket horizontal foot (L bend at bottom)
+const pilotBracketFoot = new THREE.Mesh(
+  new THREE.BoxGeometry(0.060, 0.008, 0.030), _matCastIron,
+);
+pilotBracketFoot.position.set(PILOT_X, PILOT_Y - 0.060, PILOT_Z);
+pilotBracketFoot.userData.part = 'pilot';
+root.add(pilotBracketFoot);
+// 2 mounting bolts in the foot
+for (const dx of [-0.020, 0.020]) {
+  const bolt = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.004, 0.004, 0.012, 6), _matStainlessDark,
+  );
+  bolt.position.set(PILOT_X + dx, PILOT_Y - 0.062, PILOT_Z);
+  bolt.userData.part = 'pilot';
+  root.add(bolt);
+}
+
+// --- Pilot orifice (brass hex spud) ---
+const pilotOrifice = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.008, 0.010, 0.014, 6), _matBrass,
+);
+pilotOrifice.position.set(PILOT_X, PILOT_Y + 0.06, PILOT_Z);
+pilotOrifice.userData.part = 'pilot';
+root.add(pilotOrifice);
+// Tiny threaded boss above orifice
+const orificeBoss = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.005, 0.005, 0.006, 10), _matBrass,
+);
+orificeBoss.position.set(PILOT_X, PILOT_Y + 0.072, PILOT_Z);
+orificeBoss.userData.part = 'pilot';
+root.add(orificeBoss);
+
+// --- Pilot hood (curved metal shield over the flame, prevents draft blowout) ---
+const pilotHood = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.024, 0.020, 0.028, 14, 1, true, Math.PI, Math.PI),
+  _matStainless.clone(),
+);
+pilotHood.material.side = THREE.DoubleSide;
+pilotHood.position.set(PILOT_X, PILOT_Y + 0.096, PILOT_Z);
+pilotHood.userData.part = 'pilot';
+root.add(pilotHood);
+// Hood support arm (small bracket extending from the main bracket)
+const hoodArm = new THREE.Mesh(
+  new THREE.BoxGeometry(0.008, 0.020, 0.012), _matCastIron,
+);
+hoodArm.position.set(PILOT_X + 0.016, PILOT_Y + 0.090, PILOT_Z);
+hoodArm.userData.part = 'pilot';
+root.add(hoodArm);
+
+// --- Pilot tube (copper, supplies gas from valve to orifice) ---
+//   Routed: from valve LEFT side → curve up → goes RIGHT to pilot bracket
+const _matCopper = new THREE.MeshStandardMaterial({ color: '#c87530', roughness: 0.28, metalness: 0.9 });
+const pilotTube = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.005, 0.005, 0.85, 10),
+  _matCopper,
+);
+pilotTube.position.set(PILOT_X - 0.42, BURNER_Y - 0.025, PILOT_Z);
+pilotTube.rotation.z = Math.PI / 2;
+pilotTube.userData.part = 'pilot';
+root.add(pilotTube);
+// Pilot tube vertical riser from horizontal run up to orifice
+const pilotTubeRiser = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.005, 0.005, 0.08, 10), _matCopper,
+);
+pilotTubeRiser.position.set(PILOT_X, BURNER_Y + 0.015, PILOT_Z);
+pilotTubeRiser.userData.part = 'pilot';
+root.add(pilotTubeRiser);
+// Compression fitting on the riser top (where tube enters orifice base)
+const compFitting = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.0075, 0.0075, 0.008, 6), _matBrass,
+);
+compFitting.position.set(PILOT_X, PILOT_Y + 0.050, PILOT_Z);
+compFitting.userData.part = 'pilot';
+root.add(compFitting);
+
+// --- Thermocouple (silver wire — millivolt safety, generates ~30mV when hot) ---
+const thermocouple = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.0032, 0.0032, 0.80, 6),
+  new THREE.MeshStandardMaterial({ color: '#a0a0a8', roughness: 0.4, metalness: 0.9 }),
+);
+thermocouple.position.set(PILOT_X - 0.40, BURNER_Y - 0.045, PILOT_Z + 0.010);
+thermocouple.rotation.z = Math.PI / 2;
+thermocouple.userData.part = 'pilot';
+root.add(thermocouple);
+// Thermocouple TIP (gold, sits in the pilot flame)
+const thermoTip = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.0055, 0.0055, 0.018, 12),
+  new THREE.MeshStandardMaterial({ color: '#d4b818', roughness: 0.35, metalness: 0.9 }),
+);
+thermoTip.position.set(PILOT_X, PILOT_Y + 0.070, PILOT_Z + 0.010);
+thermoTip.userData.part = 'pilot';
+root.add(thermoTip);
+
+// --- Thermopile (separate from thermocouple, generates ~750mV — newer systems) ---
+const thermopile = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.0040, 0.0040, 0.78, 8),
+  new THREE.MeshStandardMaterial({ color: '#888888', roughness: 0.5, metalness: 0.7 }),
+);
+thermopile.position.set(PILOT_X - 0.39, BURNER_Y - 0.058, PILOT_Z - 0.010);
+thermopile.rotation.z = Math.PI / 2;
+thermopile.userData.part = 'pilot';
+root.add(thermopile);
+// Thermopile probe (larger tip, also sits in the flame)
+const thermopileProbe = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.0070, 0.0070, 0.022, 12),
+  new THREE.MeshStandardMaterial({ color: '#c0c0c8', roughness: 0.35, metalness: 0.9 }),
+);
+thermopileProbe.position.set(PILOT_X, PILOT_Y + 0.066, PILOT_Z - 0.010);
+thermopileProbe.userData.part = 'pilot';
+root.add(thermopileProbe);
+
+// --- Spark ignition electrode (with ceramic white insulator) ---
+const electrodeBody = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.0045, 0.0045, 0.075, 10),
+  new THREE.MeshStandardMaterial({ color: '#f4f0e8', roughness: 0.5, metalness: 0 }),
+);
+electrodeBody.position.set(PILOT_X - 0.006, PILOT_Y + 0.025, PILOT_Z + 0.020);
+electrodeBody.userData.part = 'pilot';
+root.add(electrodeBody);
+// Sharp electrode tip (metal point that arcs to the burner ground)
+const electrodeTip = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.0015, 0.001, 0.014, 6),
+  new THREE.MeshStandardMaterial({ color: '#888', roughness: 0.4, metalness: 0.9 }),
+);
+electrodeTip.position.set(PILOT_X - 0.006, PILOT_Y + 0.072, PILOT_Z + 0.020);
+electrodeTip.userData.part = 'pilot';
+root.add(electrodeTip);
+// Ignition wire (HV insulated cable trailing back to electronic ignition module)
+const ignitionWire = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.003, 0.003, 0.45, 6),
+  new THREE.MeshStandardMaterial({ color: '#1a1a1a', roughness: 0.85, metalness: 0 }),
+);
+ignitionWire.position.set(PILOT_X - 0.22, PILOT_Y + 0.015, PILOT_Z + 0.022);
+ignitionWire.rotation.z = Math.PI / 2;
+ignitionWire.userData.part = 'pilot';
+root.add(ignitionWire);
+
+// --- Pilot flame (small constant orange/blue flame) ---
+const pilotFlame = new THREE.Mesh(
+  new THREE.ConeGeometry(0.013, 0.04, 8),
+  new THREE.MeshStandardMaterial({
+    color: '#ffaa30', emissive: '#ff7020', emissiveIntensity: 2.0,
+    transparent: true, opacity: 0.85,
+  }),
+);
+pilotFlame.position.set(PILOT_X, PILOT_Y + 0.078, PILOT_Z);
+pilotFlame.userData.part = 'pilot';
+root.add(pilotFlame);
+// Blue inner cone at the base of pilot flame (gas-flame characteristic)
+const pilotBlue = new THREE.Mesh(
+  new THREE.ConeGeometry(0.008, 0.018, 8),
+  new THREE.MeshStandardMaterial({
+    color: '#80c0ff', emissive: '#3070ff', emissiveIntensity: 1.5,
+    transparent: true, opacity: 0.7,
+  }),
+);
+pilotBlue.position.set(PILOT_X, PILOT_Y + 0.067, PILOT_Z);
+pilotBlue.userData.part = 'pilot';
+root.add(pilotBlue);
+
+// ====================================================================
+//  4. MILLIVOLT GAS CONTROL VALVE  —  full Honeywell/SIT-style body
+//     Real valve has: cast-aluminum body, ON/OFF/PILOT knob, pilot
+//     adjustment screw (slotted), pressure regulator adjustment under cap,
+//     2 thermopile terminals, inlet + outlet pipe flanges, model plate,
+//     mounting bracket, pilot tube outlet, and inlet pressure tap.
+// ====================================================================
+currentPart = 'gasValve';
+const VALVE_X = -1.18, VALVE_Y = -2.12, VALVE_Z = 0.40;
+const _matValveBody = new THREE.MeshStandardMaterial({ color: '#4a4a52', roughness: 0.6, metalness: 0.55 });
+const _matValveTop  = new THREE.MeshStandardMaterial({ color: '#3a3a40', roughness: 0.65, metalness: 0.5 });
+
+// --- Main body (cast-aluminum) ---
+const valveBody = new THREE.Mesh(
+  new THREE.BoxGeometry(0.22, 0.14, 0.18), _matValveBody,
+);
+valveBody.position.set(VALVE_X, VALVE_Y, VALVE_Z);
+valveBody.castShadow = valveBody.receiveShadow = true;
+valveBody.userData.part = 'gasValve';
+root.add(valveBody);
+// Slight top "shoulder" / domed cover
+const valveTop = new THREE.Mesh(
+  new THREE.BoxGeometry(0.18, 0.020, 0.14), _matValveTop,
+);
+valveTop.position.set(VALVE_X, VALVE_Y + 0.08, VALVE_Z);
+valveTop.userData.part = 'gasValve';
+root.add(valveTop);
+
+// --- Red OFF/PILOT/ON knob with serrated edge ---
+const valveKnob = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.046, 0.046, 0.024, 24), _matRed,
+);
+valveKnob.position.set(VALVE_X, VALVE_Y, VALVE_Z + 0.103);
+valveKnob.rotation.x = Math.PI / 2;
+valveKnob.userData.part = 'gasValve';
+root.add(valveKnob);
+// Knob center cap (slightly raised middle)
+const knobCenter = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.018, 0.018, 0.030, 16),
+  new THREE.MeshStandardMaterial({ color: '#7a1010', roughness: 0.4, metalness: 0.2 }),
+);
+knobCenter.position.set(VALVE_X, VALVE_Y, VALVE_Z + 0.116);
+knobCenter.rotation.x = Math.PI / 2;
+knobCenter.userData.part = 'gasValve';
+root.add(knobCenter);
+// White triangle pointer/indicator (the arrow on the knob)
+const knobNotch = new THREE.Mesh(
+  new THREE.BoxGeometry(0.006, 0.028, 0.005),
+  new THREE.MeshStandardMaterial({ color: '#f5f0e6', roughness: 0.4 }),
+);
+knobNotch.position.set(VALVE_X, VALVE_Y + 0.025, VALVE_Z + 0.117);
+knobNotch.userData.part = 'gasValve';
+root.add(knobNotch);
+// Position labels — 3 small bumps around the knob (OFF / PILOT / ON)
+for (const angle of [-Math.PI/3, 0, Math.PI/3]) {
+  const bump = new THREE.Mesh(
+    new THREE.BoxGeometry(0.012, 0.004, 0.003),
+    new THREE.MeshStandardMaterial({ color: '#e8e0d2', roughness: 0.5 }),
+  );
+  const rx = Math.sin(angle) * 0.062;
+  const ry = Math.cos(angle) * 0.062;
+  bump.position.set(VALVE_X + rx, VALVE_Y + ry, VALVE_Z + 0.094);
+  bump.rotation.z = -angle;
+  bump.userData.part = 'gasValve';
+  root.add(bump);
+}
+
+// --- Pilot adjustment screw (small slotted, under removable cap) ---
+const pilotCap = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.012, 0.012, 0.014, 8), _matBrass,
+);
+pilotCap.position.set(VALVE_X + 0.072, VALVE_Y + 0.030, VALVE_Z + 0.094);
+pilotCap.rotation.x = Math.PI / 2;
+pilotCap.userData.part = 'gasValve';
+root.add(pilotCap);
+// Slot in the cap
+const pilotSlot = new THREE.Mesh(
+  new THREE.BoxGeometry(0.014, 0.0025, 0.002),
+  new THREE.MeshStandardMaterial({ color: '#0a0a0a', roughness: 0.8 }),
+);
+pilotSlot.position.set(VALVE_X + 0.072, VALVE_Y + 0.030, VALVE_Z + 0.102);
+pilotSlot.userData.part = 'gasValve';
+root.add(pilotSlot);
+
+// --- Pressure regulator adjustment cap (larger, under round cover) ---
+const regCap = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.018, 0.018, 0.020, 12), _matBrass,
+);
+regCap.position.set(VALVE_X - 0.072, VALVE_Y + 0.030, VALVE_Z + 0.092);
+regCap.rotation.x = Math.PI / 2;
+regCap.userData.part = 'gasValve';
+root.add(regCap);
+// Small vent slot on regulator cap (so diaphragm can breathe)
+const regVent = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.003, 0.003, 0.006, 8), _matCastIron,
+);
+regVent.position.set(VALVE_X - 0.072, VALVE_Y + 0.030, VALVE_Z + 0.104);
+regVent.rotation.x = Math.PI / 2;
+regVent.userData.part = 'gasValve';
+root.add(regVent);
+
+// --- 2 thermopile terminal screws (where mV wires connect — usually marked TH/TP) ---
+for (let i = 0; i < 2; i++) {
+  const ty = VALVE_Y - 0.030 + i * 0.020;
+  const term = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.005, 0.005, 0.012, 8), _matBrass,
+  );
+  term.position.set(VALVE_X + 0.116, ty, VALVE_Z + 0.04);
+  term.rotation.z = Math.PI / 2;
+  term.userData.part = 'gasValve';
+  root.add(term);
+  // Wire eye terminal (small ring on the wire)
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(0.005, 0.001, 6, 12),
+    new THREE.MeshStandardMaterial({ color: '#888', roughness: 0.4, metalness: 0.8 }),
+  );
+  ring.position.set(VALVE_X + 0.118, ty, VALVE_Z + 0.04);
+  ring.rotation.y = Math.PI / 2;
+  ring.userData.part = 'gasValve';
+  root.add(ring);
+}
+
+// --- Pilot tube outlet (small brass nipple on side, where pilot tube starts) ---
+const pilotOutlet = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.006, 0.006, 0.022, 10), _matBrass,
+);
+pilotOutlet.position.set(VALVE_X + 0.124, VALVE_Y + 0.015, VALVE_Z);
+pilotOutlet.rotation.z = Math.PI / 2;
+pilotOutlet.userData.part = 'gasValve';
+root.add(pilotOutlet);
+
+// --- Inlet pressure tap (small plug on side) ---
+const inletTap = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.007, 0.007, 0.014, 10), _matBrass,
+);
+inletTap.position.set(VALVE_X - 0.118, VALVE_Y - 0.030, VALVE_Z);
+inletTap.rotation.z = Math.PI / 2;
+inletTap.userData.part = 'gasValve';
+root.add(inletTap);
+
+// --- Model/spec plate (small printed plate on top) ---
+const valvePlate = new THREE.Mesh(
+  new THREE.BoxGeometry(0.060, 0.005, 0.040),
+  new THREE.MeshStandardMaterial({ color: '#d8d8d2', roughness: 0.4, metalness: 0.3 }),
+);
+valvePlate.position.set(VALVE_X, VALVE_Y + 0.093, VALVE_Z - 0.040);
+valvePlate.userData.part = 'gasValve';
+root.add(valvePlate);
+
+// --- 2 mounting bracket ears (where valve is screwed to bracket) ---
+for (const sz of [-1, 1]) {
+  const ear = new THREE.Mesh(
+    new THREE.BoxGeometry(0.024, 0.022, 0.010), _matValveBody,
+  );
+  ear.position.set(VALVE_X, VALVE_Y - 0.075, VALVE_Z + sz * 0.060);
+  ear.userData.part = 'gasValve';
+  root.add(ear);
+  const earBolt = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.0045, 0.0045, 0.014, 6), _matStainlessDark,
+  );
+  earBolt.position.set(VALVE_X, VALVE_Y - 0.080, VALVE_Z + sz * 0.060);
+  earBolt.userData.part = 'gasValve';
+  root.add(earBolt);
+}
+
+// --- Inlet & outlet flanges (where supply pipe + manifold connect) ---
+// Inlet flange (left side)
+const inletFlange = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.028, 0.028, 0.04, 12), _matBrass,
+);
+inletFlange.position.set(VALVE_X - 0.130, VALVE_Y + 0.005, VALVE_Z);
+inletFlange.rotation.z = Math.PI / 2;
+inletFlange.userData.part = 'gasValve';
+root.add(inletFlange);
+// Outlet flange (right side)
+const outletFlange = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.024, 0.024, 0.04, 12), _matBrass,
+);
+outletFlange.position.set(VALVE_X + 0.130, VALVE_Y - 0.040, VALVE_Z);
+outletFlange.rotation.z = Math.PI / 2;
+outletFlange.userData.part = 'gasValve';
+root.add(outletFlange);
+
+// --- Manifold pipe running from valve outlet up to burner inlet area ---
+const manifoldRun = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.018, 0.018, 0.65, 12), _matBlackIron,
+);
+manifoldRun.position.set(VALVE_X + 0.36, VALVE_Y - 0.040, VALVE_Z - 0.22);
+manifoldRun.rotation.set(0, Math.PI / 4, Math.PI / 2);
+manifoldRun.userData.part = 'gasValve';
+root.add(manifoldRun);
+// Union nut at the end of the manifold (where it meets burner orifice)
+const manifoldUnion = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.022, 0.022, 0.022, 6), _matBrass,
+);
+manifoldUnion.position.set(VALVE_X + 0.62, VALVE_Y - 0.045, VALVE_Z - 0.43);
+manifoldUnion.rotation.z = Math.PI / 2;
+manifoldUnion.userData.part = 'gasValve';
+root.add(manifoldUnion);
+
+// ====================================================================
+//  5. GAS SUPPLY LINE  —  clean, logical, code-compliant routing
+//     Flow direction (FROM HOUSE → TO BURNER):
+//       1) Vertical riser comes up through floor (LEFT of the valve)
+//       2) T-fitting splits — DRIP LEG drops down (sediment trap, cap)
+//       3) Riser continues UP past valve top
+//       4) 90° elbow turns RIGHT toward the valve
+//       5) Short horizontal run
+//       6) MANUAL BALL VALVE (the ONLY external shutoff for the user)
+//       7) Short nipple + CSST end-fitting nut
+//       8) Yellow CSST flex line curves DOWN into the valve inlet
+//       9) CSST end-fitting nut at the valve inlet flange
+//     Internal shutoff? — There is NO separate internal valve. The gas
+//     control valve's RED knob (OFF/PILOT/ON) IS the second shutoff
+//     (per NFPA 54 §9.6.2: the appliance shutoff inside the cabinet can
+//     be the integral knob on the control valve).
+// ====================================================================
+currentPart = 'gasLine';
+
+// Coordinates for the supply run — all relative to the gas valve position
+const SUPPLY_X      = VALVE_X - 0.42;            // x-position of the riser/ball valve
+const RISER_TOP_Y   = VALVE_Y + 0.18;            // top of the riser (above valve)
+const BALL_VALVE_Y  = RISER_TOP_Y;               // ball valve sits on the horizontal run
+const FLOOR_Y       = -2.55;                     // ground level
+const DRIP_BOT_Y    = VALVE_Y - 0.30;            // bottom of drip leg
+
+// --- A. VERTICAL RISER from floor up past valve top ---
+const supplyVert = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.020, 0.020, RISER_TOP_Y - (VALVE_Y - 0.10), 14), _matBlackIron,
+);
+supplyVert.position.set(SUPPLY_X, (RISER_TOP_Y + VALVE_Y - 0.10) / 2, VALVE_Z);
+supplyVert.castShadow = supplyVert.receiveShadow = true;
+supplyVert.userData.part = 'gasLine';
+root.add(supplyVert);
+
+// --- B. DRIP LEG T-FITTING (where the sediment trap branches off) ---
+const dripT = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.028, 0.028, 0.04, 6), _matBlackIron,
+);
+dripT.position.set(SUPPLY_X, VALVE_Y - 0.10, VALVE_Z);
+dripT.userData.part = 'gasLine';
+root.add(dripT);
+
+// --- C. DRIP LEG drops below the T (sediment trap, REQUIRED by code) ---
+const dripLeg = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.020, 0.020, VALVE_Y - 0.10 - DRIP_BOT_Y, 12), _matBlackIron,
+);
+dripLeg.position.set(SUPPLY_X, (VALVE_Y - 0.10 + DRIP_BOT_Y) / 2, VALVE_Z);
+dripLeg.userData.part = 'gasLine';
+root.add(dripLeg);
+// Hex pipe cap at the bottom (where condensate collects)
+const dripCap = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.024, 0.024, 0.022, 6), _matBlackIron,
+);
+dripCap.position.set(SUPPLY_X, DRIP_BOT_Y - 0.011, VALVE_Z);
+dripCap.userData.part = 'gasLine';
+root.add(dripCap);
+
+// --- D. 90° ELBOW at top of riser (a chunky cast-iron corner fitting) ---
+//   Real cast-iron 90° elbows are bulky — a forged ball with two threaded ports.
+//   We model that as a sphere RIGHT AT the riser top, so both pipes (vertical
+//   riser below + horizontal pipe to the right) "enter" the sphere with no gap.
+const elbowBody = new THREE.Mesh(
+  new THREE.SphereGeometry(0.030, 16, 12), _matBlackIron,
+);
+elbowBody.position.set(SUPPLY_X, RISER_TOP_Y, VALVE_Z);
+elbowBody.castShadow = elbowBody.receiveShadow = true;
+elbowBody.userData.part = 'gasLine';
+root.add(elbowBody);
+// Hex flange around the elbow center (gives it the cast look)
+const elbowFlange = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.026, 0.026, 0.025, 6), _matBlackIron,
+);
+elbowFlange.position.set(SUPPLY_X, RISER_TOP_Y, VALVE_Z);
+elbowFlange.rotation.x = Math.PI / 2;
+elbowFlange.userData.part = 'gasLine';
+root.add(elbowFlange);
+
+// --- E. HORIZONTAL RUN — pipe from the elbow over to the ball valve.
+//   Starts INSIDE the elbow sphere and extends RIGHT until it overlaps with
+//   the ball-valve body (so the seam is hidden inside the valve cube).
+const BV_X_PRE       = SUPPLY_X + 0.220;          // where ball-valve CENTER will sit
+const horizStartX    = SUPPLY_X;                  // overlap into elbow sphere
+const horizEndX      = BV_X_PRE + 0.005;          // overlap 5mm INTO ball-valve cube
+const horizLen       = horizEndX - horizStartX;
+const supplyHoriz = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.020, 0.020, horizLen, 14), _matBlackIron,
+);
+supplyHoriz.position.set((horizStartX + horizEndX) / 2, RISER_TOP_Y, VALVE_Z);
+supplyHoriz.rotation.z = Math.PI / 2;
+supplyHoriz.castShadow = supplyHoriz.receiveShadow = true;
+supplyHoriz.userData.part = 'gasLine';
+root.add(supplyHoriz);
+
+// --- F. MANUAL BALL SHUTOFF VALVE (the user-accessible OFF switch) ---
+const BV_X = BV_X_PRE;       // re-uses the centered position computed for the run
+const ballValve = new THREE.Mesh(
+  new THREE.BoxGeometry(0.055, 0.060, 0.055), _matBrass,
+);
+ballValve.position.set(BV_X, BALL_VALVE_Y, VALVE_Z);
+ballValve.castShadow = ballValve.receiveShadow = true;
+ballValve.userData.part = 'gasLine';
+root.add(ballValve);
+// Stem packing nut (hex, top of body)
+const stemPacking = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.014, 0.014, 0.012, 6), _matBrass,
+);
+stemPacking.position.set(BV_X, BALL_VALVE_Y + 0.036, VALVE_Z);
+stemPacking.userData.part = 'gasLine';
+root.add(stemPacking);
+// Stem (shaft)
+const ballStem = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.005, 0.005, 0.020, 8), _matBrass,
+);
+ballStem.position.set(BV_X, BALL_VALVE_Y + 0.048, VALVE_Z);
+ballStem.userData.part = 'gasLine';
+root.add(ballStem);
+// RED lever handle — laid PARALLEL to the pipe = OPEN (per industry convention)
+const ballHandle = new THREE.Mesh(
+  new THREE.BoxGeometry(0.110, 0.010, 0.018), _matRed,
+);
+ballHandle.position.set(BV_X + 0.020, BALL_VALVE_Y + 0.060, VALVE_Z);
+ballHandle.userData.part = 'gasLine';
+root.add(ballHandle);
+// Handle grip bushing
+const handleGrip = new THREE.Mesh(
+  new THREE.BoxGeometry(0.024, 0.014, 0.022),
+  new THREE.MeshStandardMaterial({ color: '#1c1c1c', roughness: 0.85 }),
+);
+handleGrip.position.set(BV_X + 0.065, BALL_VALVE_Y + 0.060, VALVE_Z);
+handleGrip.userData.part = 'gasLine';
+root.add(handleGrip);
+// "GAS" warning tag hanging from the handle (small yellow flag)
+const handleTag = new THREE.Mesh(
+  new THREE.BoxGeometry(0.025, 0.015, 0.001),
+  new THREE.MeshStandardMaterial({ color: '#f8d020', roughness: 0.5 }),
+);
+handleTag.position.set(BV_X + 0.020, BALL_VALVE_Y + 0.078, VALVE_Z);
+handleTag.userData.part = 'gasLine';
+root.add(handleTag);
+
+// --- G. SHORT PIPE NIPPLE coming out of the ball valve ---
+const nipple2 = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.022, 0.022, 0.022, 6), _matBlackIron,
+);
+nipple2.position.set(BV_X + 0.038, BALL_VALVE_Y, VALVE_Z);
+nipple2.rotation.z = Math.PI / 2;
+nipple2.userData.part = 'gasLine';
+root.add(nipple2);
+
+// --- H. CSST end-fitting nut (where flex line begins) ---
+const csstNut = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.020, 0.020, 0.024, 6), _matBrass,
+);
+csstNut.position.set(BV_X + 0.060, BALL_VALVE_Y, VALVE_Z);
+csstNut.rotation.z = Math.PI / 2;
+csstNut.userData.part = 'gasLine';
+root.add(csstNut);
+
+// --- I. YELLOW CSST FLEX LINE — physically anchored at both ends.
+//     To eliminate any visible gap, the END point is pushed PAST the inlet flange
+//     INTO the gas-valve body face, and capped with a brass union nut that visually
+//     buttons the flex line directly to the body. No floating tip.
+// Gas-valve BODY left face is at x = VALVE_X - 0.11 = -1.290
+// Inlet flange CENTER at x = VALVE_X - 0.130, tip at x = -1.330
+const _BODY_LEFT_FACE_X = VALVE_X - 0.110;                // = -1.290
+const _INLET_Y          = VALVE_Y + 0.005;                // = -2.115
+const _INLET_Z          = VALVE_Z;
+
+// Make the inlet flange BIGGER + visible (so the end attaches to something clearly)
+//   — re-create a more substantial cylindrical flange directly here.
+const inletFlangeBig = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.030, 0.030, 0.06, 16), _matBrass,
+);
+inletFlangeBig.position.set(VALVE_X - 0.140, _INLET_Y, _INLET_Z);
+inletFlangeBig.rotation.z = Math.PI / 2;
+inletFlangeBig.castShadow = inletFlangeBig.receiveShadow = true;
+inletFlangeBig.userData.part = 'gasLine';
+root.add(inletFlangeBig);
+
+// CSST end goes ALL THE WAY into the body face (so visually no gap)
+const _CSST_END_X = _BODY_LEFT_FACE_X + 0.005;            // overlap 5mm into body
+const _CSST_START_X = BV_X + 0.072;
+const _CSST_START_Y = BALL_VALVE_Y;
+
+// Bezier-like path with mid-controls that bend gracefully
+const csstStart = new THREE.Vector3(_CSST_START_X,             _CSST_START_Y,             _INLET_Z);
+const csstMid1  = new THREE.Vector3(_CSST_START_X + 0.025,     _CSST_START_Y - 0.040,     _INLET_Z);
+const csstMid2  = new THREE.Vector3(_CSST_END_X   + 0.030,     _INLET_Y       + 0.050,    _INLET_Z);
+const csstEnd   = new THREE.Vector3(_CSST_END_X,               _INLET_Y,                  _INLET_Z);
+const csstPath  = [csstStart, csstMid1, csstMid2, csstEnd];
+for (let i = 0; i < csstPath.length - 1; i++) {
+  const a = csstPath[i], b = csstPath[i + 1];
+  const dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z;
+  const len = Math.hypot(dx, dy, dz);
+  const csstSeg = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.022, 0.022, len, 14), _matCSST,
+  );
+  csstSeg.position.set((a.x + b.x)/2, (a.y + b.y)/2, (a.z + b.z)/2);
+  const axis = new THREE.Vector3(dx, dy, dz).normalize();
+  csstSeg.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), axis);
+  csstSeg.userData.part = 'gasLine';
+  root.add(csstSeg);
+  // Corrugation rings (visible wavy texture)
+  const ringCount = Math.max(3, Math.floor(len * 50));
+  for (let r = 1; r <= ringCount; r++) {
+    const t = r / (ringCount + 1);
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(0.0245, 0.0035, 6, 16), _matCSST,
+    );
+    ring.position.set(a.x + dx * t, a.y + dy * t, a.z + dz * t);
+    ring.lookAt(b);
+    ring.userData.part = 'gasLine';
+    root.add(ring);
+  }
+}
+// BIG brass union nut at the body face — visually clamps the CSST onto the valve.
+// Sized to overlap both the CSST and the body so it reads as a solid connection.
+const csstNut2 = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.030, 0.030, 0.034, 6), _matBrass,
+);
+csstNut2.position.set(_BODY_LEFT_FACE_X - 0.010, _INLET_Y, _INLET_Z);
+csstNut2.rotation.z = Math.PI / 2;
+csstNut2.castShadow = csstNut2.receiveShadow = true;
+csstNut2.userData.part = 'gasLine';
+root.add(csstNut2);
+// Small flange disc behind the nut (against the body) — like a washer
+const csstWasher = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.034, 0.034, 0.006, 14), _matBrass,
+);
+csstWasher.position.set(_BODY_LEFT_FACE_X + 0.003, _INLET_Y, _INLET_Z);
+csstWasher.rotation.z = Math.PI / 2;
+csstWasher.userData.part = 'gasLine';
+root.add(csstWasher);
+
+// --- J. Yellow CSST identification label ---
+const csstLabel = new THREE.Mesh(
+  new THREE.BoxGeometry(0.040, 0.020, 0.001),
+  new THREE.MeshStandardMaterial({ color: '#f8d020', roughness: 0.5 }),
+);
+csstLabel.position.set(BV_X + 0.110, BALL_VALVE_Y - 0.020, VALVE_Z + 0.012);
+csstLabel.userData.part = 'gasLine';
+root.add(csstLabel);
+
+// ---- Tag everything just built (ceramic logs + burner + grate + pilot + valve + line) as gasOnly
+const _GAS_PARTS = new Set(['burner','grate','pilot','gasValve','gasLine','damperClamp']);
+root.traverse(o => {
+  if (!o.isMesh && !o.isGroup) return;
+  // Ceramic logs were tagged 'fire' but built AFTER the wood-log tagging — they have no woodOnly flag
+  if (o.userData.part === 'fire' && !o.userData.woodOnly) o.userData.gasOnly = true;
+  if (_GAS_PARTS.has(o.userData.part)) o.userData.gasOnly = true;
+});
+
+currentPart = 'mantle';
+// ============== MANTLE — ONE solid carved beam (single piece, no seams) ==============
+// Replaced the old 3-stacked-box profile (which read as 3 separate planks) with a
+// single thick beam. The texture wraps continuously around all six faces because
+// it's a single BoxGeometry — the grain matches across edges instead of restarting
+// on each layer.
+//
+// New finish: smoke-stained barnwood grey (NOT walnut brown — clearly distinct from
+// the warm-tan bricks behind it). A different texture (concrete) gives a weathered
+// stone-painted feel rather than wood. The corbels are MERGED into the main beam
+// — they extrude down from the same single piece, not glued on.
+{
+  // Real hardwood texture with a LIGHT NATURAL OAK tint — classic look on brick.
+  // Much lighter and creamier than the warm-tan bricks, so the mantle pops forward
+  // visually without going to either extreme (was too dark earlier, too brick-like).
+  const _matMantleSingle = new THREE.MeshStandardMaterial({
+    map:          loadTex('./3d/textures/wood_diff.jpg', true,  [1.4, 0.7]),
+    normalMap:    loadTex('./3d/textures/wood_nor.jpg',  false, [1.4, 0.7], /*isNormal*/ true),
+    normalScale:  new THREE.Vector2(0.55, 0.55),
+    roughnessMap: loadTex('./3d/textures/wood_rough.jpg', false, [1.4, 0.7]),
+    color:        new THREE.Color('#d8b888'),     // warm honey-oak — lighter than bricks, clearly wood
+    roughness:    0.72,
+    metalness:    0,
+    envMapIntensity: 0.45,
+  });
+  // ONE solid beam, full mantle depth/width — looks like a single carved piece
+  const mantleBeam = new THREE.Mesh(
+    new THREE.BoxGeometry(2.50, 0.22, 0.56),
+    _matMantleSingle,
+  );
+  mantleBeam.position.set(0, -0.28, 0.52);
+  mantleBeam.castShadow = mantleBeam.receiveShadow = true;
+  mantleBeam.userData.part = 'mantle';
+  root.add(mantleBeam);
+
+  // 2 corbel brackets — built as ONE downward extension of the same beam shape
+  // (still tagged 'mantle' so they read as part of the same carved piece in X-ray).
+  for (const cx of [-1.05, 1.05]) {
+    const corbel = new THREE.Mesh(
+      new THREE.BoxGeometry(0.16, 0.36, 0.44),
+      _matMantleSingle,                            // SAME material → texture continuity
+    );
+    corbel.position.set(cx, -0.55, 0.44);
+    corbel.castShadow = corbel.receiveShadow = true;
+    corbel.userData.part = 'mantle';
+    root.add(corbel);
+  }
+}
+
+currentPart = 'body';
+// ============== CHIMNEY BODY — single unified brick mass (header + shaft as ONE piece) ==============
+// From top of firebox opening (y=-0.85) up to crown base (y=4.21).
+// Width = 1.9 (matches outer jamb edge), depth = 1.0.
+// This is ONE continuous brick block — visually unified with the jambs below, no seam.
+box(1.9, 4.26, 1.0, MAT.brickBody, [0, 1.28, 0]);
+
+currentPart = 'cap';
+// ============== OUTSET CUSTOM CHIMNEY CAP ==============
+// Matches user's reference photos: full-width metal cap covering the entire chimney top.
+// Components from bottom up: metal skirt flange → mesh band → pyramidal hip roof with ridges.
+// Brick shaft top is at y = 4.21 (1.68 + 5.06/2).
+
+// Cap metals — proper polished bronze with metallic reflections (like real outset caps)
+MAT.metalCap = new THREE.MeshStandardMaterial({
+  color: '#7a5028',         // lighter bronze (when metallic, this tints reflections)
+  roughness: 0.35,          // shiny — proper metal feel
+  metalness: 0.85,          // strongly metallic
+  envMapIntensity: 0.7,     // moderate HDR contribution for natural bronze look
+  emissive: '#2a1a0c',      // subtle warm baseline anchor
+  emissiveIntensity: 0.3,
+});
+MAT.metalCapDark = new THREE.MeshStandardMaterial({
+  color: '#3a2614',         // darker bronze edges
+  roughness: 0.5,           // slightly less shiny (for trim, edges)
+  metalness: 0.8,
+  envMapIntensity: 0.5,
+  emissive: '#180e06',
+  emissiveIntensity: 0.25,
+});
+const metalCap = MAT.metalCap;
+const metalCapDark = MAT.metalCapDark;
+
+// Thin concrete seal layer (hidden under cap base, but exists architecturally)
+box(1.95, 0.04, 1.04, MAT.concreteDark, [0, 3.43, 0]);
+
+// 1. BASE FLANGE — wide metal skirt covering the top edge of the brick (slight overhang)
+const FLANGE_Y = 3.47;
+box(2.10, 0.05, 1.14, metalCapDark, [0, FLANGE_Y, 0]);          // bottom drip rim
+box(2.04, 0.14, 1.08, metalCap,     [0, FLANGE_Y + 0.095, 0]);  // main skirt band
+box(2.08, 0.04, 1.12, metalCapDark, [0, FLANGE_Y + 0.185, 0]);  // top trim ring
+
+// 2. MESH BAND — diamond grid wires between flange and roof
+const MESH_Y_BOT = FLANGE_Y + 0.21;
+const MESH_H = 0.22;
+const MESH_HW = 0.99;   // half width of mesh footprint (slightly inside flange)
+const MESH_HD = 0.52;   // half depth
+
+// 4 corner posts (thin metal verticals at corners)
+for (const [px, pz] of [[-MESH_HW, -MESH_HD], [MESH_HW, -MESH_HD], [-MESH_HW, MESH_HD], [MESH_HW, MESH_HD]]) {
+  cyl(0.022, MESH_H + 0.02, metalCapDark, [px, MESH_Y_BOT + MESH_H/2, pz], 10);
+}
+
+// Mesh wires — dense criss-cross pattern (diamond grid suggestion)
+const WIRE_R = 0.0035;
+const WIRES_H = 6;
+const stepY_cap = MESH_H / (WIRES_H + 1);
+const meshCenterY = MESH_Y_BOT + MESH_H/2;
+
+// Pre-built geometries (reuse for performance)
+const wireFB = new THREE.CylinderGeometry(WIRE_R, WIRE_R, MESH_HW * 2, 6);  // front/back horizontals
+const wireLR = new THREE.CylinderGeometry(WIRE_R, WIRE_R, MESH_HD * 2, 6);  // left/right horizontals
+const wireV  = new THREE.CylinderGeometry(WIRE_R, WIRE_R, MESH_H, 6);
+
+for (const side of ['front', 'back', 'left', 'right']) {
+  const isX = (side === 'front' || side === 'back');
+  // Horizontal wires
+  for (let i = 1; i <= WIRES_H; i++) {
+    const wy = MESH_Y_BOT + i * stepY_cap;
+    const w = new THREE.Mesh(isX ? wireFB : wireLR, metalCapDark);
+    if (side === 'front')  { w.position.set(0, wy,  MESH_HD); w.rotation.z = Math.PI/2; }
+    else if (side === 'back')  { w.position.set(0, wy, -MESH_HD); w.rotation.z = Math.PI/2; }
+    else if (side === 'left')  { w.position.set(-MESH_HW, wy, 0); w.rotation.x = Math.PI/2; }
+    else if (side === 'right') { w.position.set( MESH_HW, wy, 0); w.rotation.x = Math.PI/2; }
+    w.castShadow = false;
+    root.add(w);
+  }
+  // Vertical wires (denser on wide sides)
+  const nv = isX ? 18 : 10;
+  const half = isX ? MESH_HW : MESH_HD;
+  for (let j = 1; j <= nv; j++) {
+    const off = -half + j * (half*2)/(nv+1);
+    const w = new THREE.Mesh(wireV, metalCapDark);
+    if (side === 'front')  w.position.set(off, meshCenterY,  MESH_HD);
+    else if (side === 'back')  w.position.set(off, meshCenterY, -MESH_HD);
+    else if (side === 'left')  w.position.set(-MESH_HW, meshCenterY, off);
+    else if (side === 'right') w.position.set( MESH_HW, meshCenterY, off);
+    w.castShadow = false;
+    root.add(w);
+  }
+}
+
+// 3. ROOF SHELF — metal frame sitting on top of mesh band
+const ROOF_BASE_Y = MESH_Y_BOT + MESH_H + 0.02;
+box(2.14, 0.04, 1.16, metalCapDark, [0, ROOF_BASE_Y, 0]);       // bottom rim of roof
+box(2.10, 0.05, 1.12, metalCap,     [0, ROOF_BASE_Y + 0.04, 0]); // shelf flange
+
+// 4. PYRAMIDAL HIP ROOF — custom BufferGeometry with 4 triangular faces
+const ROOF_BASE_TOP_Y = ROOF_BASE_Y + 0.07;
+const ROOF_PEAK_Y = ROOF_BASE_TOP_Y + 0.55;
+const RHW = 1.05;  // roof base half-width (overhang slightly past flange)
+const RHD = 0.56;  // roof base half-depth
+
+(function buildHipRoof() {
+  const vertices = new Float32Array([
+    -RHW, ROOF_BASE_TOP_Y, -RHD,  // 0 BL-back
+     RHW, ROOF_BASE_TOP_Y, -RHD,  // 1 BR-back
+     RHW, ROOF_BASE_TOP_Y,  RHD,  // 2 FR-front
+    -RHW, ROOF_BASE_TOP_Y,  RHD,  // 3 FL-front
+     0,   ROOF_PEAK_Y,      0,    // 4 apex
+  ]);
+  // Indices ordered for OUTWARD-facing normals (CCW from outside each face)
+  // (Earlier winding was inverted — culled from outside, hence transparent appearance)
+  const indices = [
+    0, 4, 1,   // back face (outside view from -Z)
+    1, 4, 2,   // right face (outside view from +X)
+    2, 4, 3,   // front face (outside view from +Z)
+    3, 4, 0,   // left face (outside view from -X)
+  ];
+  const geo = new THREE.BufferGeometry();
+  geo.setIndex(indices);
+  geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+  geo.computeVertexNormals();
+  const roof = new THREE.Mesh(geo, metalCap);
+  roof.castShadow = roof.receiveShadow = true;
+  root.add(roof);
+})();
+
+// 5. RIDGE CAPS — raised metal seams along the 4 hip ridges (corner-to-apex)
+const ridges = [
+  [-RHW, -RHD], [ RHW, -RHD],
+  [ RHW,  RHD], [-RHW,  RHD],
+];
+const roofRiseH = ROOF_PEAK_Y - ROOF_BASE_TOP_Y;
+for (const [cx, cz] of ridges) {
+  const dx = -cx, dz = -cz;  // from corner toward apex (0,0)
+  const horizLen = Math.sqrt(dx*dx + dz*dz);
+  const len3d = Math.sqrt(horizLen*horizLen + roofRiseH*roofRiseH);
+  const ridge = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.018, len3d), metalCapDark);
+  // Position at midpoint of corner→apex 3D vector
+  ridge.position.set(cx/2, (ROOF_BASE_TOP_Y + ROOF_PEAK_Y)/2, cz/2);
+  // Orient along ridge: yaw (atan2 in XZ plane), then pitch (up toward apex)
+  const yaw = Math.atan2(dx, dz);
+  const pitch = Math.atan2(roofRiseH, horizLen);
+  ridge.rotation.set(0, yaw, 0);
+  ridge.rotateX(-pitch);
+  ridge.castShadow = true;
+  root.add(ridge);
+}
+
+// 6. APEX FINIAL — small decorative cap at the top of the pyramid
+const finial = new THREE.Mesh(new THREE.SphereGeometry(0.05, 16, 12), metalCap);
+finial.position.set(0, ROOF_PEAK_Y + 0.025, 0);
+finial.castShadow = true;
+root.add(finial);
+
+// ============== CROSS-SECTION INTERIOR (hidden until toggle ON) ==============
+// Clipping plane at x=0 with normal +X: hides x<0 (left half), keeps right half (x>0).
+// Camera should view from the LEFT (-X) side to see the cross-section cut + interior.
+const clipPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0);
+
+const interiorGroup = new THREE.Group();
+interiorGroup.visible = false;
+root.add(interiorGroup);
+
+// ===== FULL ANATOMICAL INTERIOR (revealed on cross-section) =====
+
+// Materials specific to interior anatomy — stored in MAT for cross-section clipping
+
+// Procedural clay-flue-tile texture — extruded fired terracotta. Real clay flue
+// tiles are nearly UNIFORM in color (factory-extruded), with only very fine grain
+// from the clay body and a barely-visible edge tone shift. NOT a blotchy / sooty
+// surface. This version mimics the clean, even appearance you actually see.
+function makeClayTileTexture() {
+  const W = 512, H = 512;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const c = cv.getContext('2d');
+
+  // 1. Uniform terracotta base — a single warm color, not a gradient
+  c.fillStyle = '#a35633';
+  c.fillRect(0, 0, W, H);
+
+  // 2. Very subtle large-scale tonal variation (±4% brightness shift, smooth)
+  for (let i = 0; i < 5; i++) {
+    const x = Math.random() * W;
+    const y = Math.random() * H;
+    const r = 180 + Math.random() * 150;
+    const lighter = Math.random() < 0.5;
+    const grad = c.createRadialGradient(x, y, 0, x, y, r);
+    if (lighter) {
+      grad.addColorStop(0, 'rgba(190,110,80,0.10)');
+      grad.addColorStop(1, 'rgba(190,110,80,0)');
+    } else {
+      grad.addColorStop(0, 'rgba(120,55,30,0.10)');
+      grad.addColorStop(1, 'rgba(120,55,30,0)');
+    }
+    c.fillStyle = grad;
+    c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill();
+  }
+
+  // 3. Fine clay-body grain — many tiny pixels of slightly varied tone.
+  //    This is the dominant texture feature in real fired clay close-up.
+  for (let i = 0; i < 9000; i++) {
+    const x = Math.random() * W, y = Math.random() * H;
+    const v = Math.random();
+    if (v < 0.45) {
+      c.fillStyle = `rgba(60,28,14,${0.06 + Math.random() * 0.06})`;
+    } else if (v < 0.75) {
+      c.fillStyle = `rgba(190,120,85,${0.05 + Math.random() * 0.06})`;
+    } else {
+      c.fillStyle = `rgba(150,80,50,${0.04 + Math.random() * 0.05})`;
+    }
+    c.fillRect(x, y, 1, 1);
+  }
+
+  // 4. A handful of TINY dark inclusions (iron oxide spots common in clay)
+  for (let i = 0; i < 12; i++) {
+    const x = Math.random() * W, y = Math.random() * H;
+    const r = 0.6 + Math.random() * 1.4;
+    c.fillStyle = 'rgba(40,18,8,0.55)';
+    c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill();
+  }
+
+  const tex = new THREE.CanvasTexture(cv);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(1, 1);
+  tex.anisotropy = 16;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+// Matching normal map — subtle bumps from the fired-clay surface variation.
+function makeClayNormalMap() {
+  const W = 512, H = 1024;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const c = cv.getContext('2d');
+  const img = c.createImageData(W, H);
+  const data = img.data;
+  function hash(x, y) { const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5; return n - Math.floor(n); }
+  function vnoise(x, y) {
+    const ix = Math.floor(x), iy = Math.floor(y);
+    const fx = x - ix, fy = y - iy;
+    const a = hash(ix, iy), b = hash(ix+1, iy), cc = hash(ix, iy+1), d = hash(ix+1, iy+1);
+    const sx = fx*fx*(3-2*fx), sy = fy*fy*(3-2*fy);
+    return a*(1-sx)*(1-sy) + b*sx*(1-sy) + cc*(1-sx)*sy + d*sx*sy;
+  }
+  for (let py = 0; py < H; py++) {
+    for (let px = 0; px < W; px++) {
+      const n1 = vnoise(px * 0.06, py * 0.06);
+      const n2 = vnoise(px * 0.18, py * 0.18);
+      const nx = (n2 - 0.5) * 0.35;
+      const ny = (vnoise(px * 0.04, py * 0.10) - 0.5) * 0.35;
+      const nz = 1;
+      const len = Math.sqrt(nx*nx + ny*ny + nz*nz);
+      const idx = (py * W + px) * 4;
+      data[idx]   = (nx/len * 0.5 + 0.5) * 255;
+      data[idx+1] = (ny/len * 0.5 + 0.5) * 255;
+      data[idx+2] = (nz/len * 0.5 + 0.5) * 255;
+      data[idx+3] = 255;
+    }
+  }
+  c.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(cv);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = 16;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  return tex;
+}
+
+// REAL photographic clay-floor texture (polyhaven clay_floor_001, CC0) — fired
+// terracotta with authentic grain, micro-cracks, color depth, and matching
+// normal + roughness maps. Replaces the procedural attempt entirely.
+MAT.clayTile = new THREE.MeshStandardMaterial({
+  map:          loadTex('./3d/textures/clay_diff.jpg',  true,  [1.0, 1.5]),
+  normalMap:    loadTex('./3d/textures/clay_nor.jpg',   false, [1.0, 1.5], /*isNormal*/ true),
+  normalScale:  new THREE.Vector2(0.6, 0.6),
+  roughnessMap: loadTex('./3d/textures/clay_rough.jpg', false, [1.0, 1.5]),
+  color:        new THREE.Color('#c87648'),     // boost the terracotta saturation slightly
+  roughness:    0.85,
+  metalness:    0,
+  envMapIntensity: 0.45,
+});
+// METALLIC SILVER with controlled env: metalness reflects DIRECT lights only
+// (cool spotlights), envMapIntensity=0 blocks warm HDR. Emissive holds cool baseline.
+MAT.fluLiner = new THREE.MeshStandardMaterial({
+  color: '#b0b6be',          // cool silver base — tints metallic reflections
+  roughness: 0.40,           // shiny enough to read as metal, not mirror
+  metalness: 0.60,           // proper stainless steel feel
+  envMapIntensity: 0,        // ZERO HDR contribution → no warm pickup
+  emissive: '#3a4252',       // cool baseline (kept low so metallic shine dominates)
+  emissiveIntensity: 0.45,
+  side: THREE.DoubleSide,
+});
+MAT.insulation = new THREE.MeshStandardMaterial({
+  color: '#5a4f3e',    // much darker muted brown (was bright cream — caused glow)
+  roughness: 1, metalness: 0, envMapIntensity: 0.0,
+  transparent: true, opacity: 0.4, side: THREE.DoubleSide,
+});
+MAT.castIron = new THREE.MeshStandardMaterial({
+  color: '#52525a', roughness: 0.55, metalness: 0.55, envMapIntensity: 0.8,
+});
+MAT.brass = new THREE.MeshStandardMaterial({
+  color: '#b58a3a', roughness: 0.3, metalness: 0.85, envMapIntensity: 1.6,  // warm brass for handles
+});
+MAT.steel = new THREE.MeshStandardMaterial({
+  color: '#6a6a6e', roughness: 0.45, metalness: 0.7, envMapIntensity: 1.4,  // brighter steel
+});
+MAT.foundation = new THREE.MeshStandardMaterial({
+  color: '#9a9288', roughness: 0.94, metalness: 0, envMapIntensity: 0.45,  // lighter grey concrete
+});
+MAT.ashWall = new THREE.MeshStandardMaterial({
+  color: '#3a342d', roughness: 0.92, metalness: 0, envMapIntensity: 0.4,  // distinct medium-dark ash dust
+});
+// Aliases for readability in code below
+const clayTileMat = MAT.clayTile, linerMat = MAT.fluLiner, insulationMat = MAT.insulation;
+const castIronMat = MAT.castIron, steelMat = MAT.steel, foundationMat = MAT.foundation;
+
+currentPart = 'foundation';
+// 1. CONCRETE FOUNDATION PAD (below the hearth, supporting the entire chimney mass)
+const foundation = new THREE.Mesh(
+  new THREE.BoxGeometry(2.6, 0.45, 1.3), foundationMat
+);
+foundation.position.set(0, -2.83, 0);
+foundation.castShadow = foundation.receiveShadow = true;
+interiorGroup.add(foundation);
+// Visible rebar grid embedded in foundation (3 horizontal bars + 3 perpendicular)
+const rebarMat = new THREE.MeshStandardMaterial({
+  color: '#5a4538', roughness: 0.8, metalness: 0.4,
+});
+for (let i = 0; i < 3; i++) {
+  // X-direction rebars
+  const z = -0.4 + i * 0.4;
+  const rebX = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.012, 0.012, 2.55, 8), rebarMat
+  );
+  rebX.rotation.z = Math.PI / 2;
+  rebX.position.set(0, -2.80, z);
+  interiorGroup.add(rebX);
+  // Z-direction rebars
+  const x = -0.85 + i * 0.85;
+  const rebZ = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.012, 0.012, 1.25, 8), rebarMat
+  );
+  rebZ.rotation.x = Math.PI / 2;
+  rebZ.position.set(x, -2.83, 0);
+  interiorGroup.add(rebZ);
+}
+
+currentPart = 'ashPit';
+// 2. ASH PIT (chamber below firebox floor) — distinct ash-dust grey, not pure black
+const ashWalls = [
+  { sz: [1.20, 0.4, 0.04], pos: [0, -2.45, -0.50] },
+  { sz: [0.04, 0.4, 1.0],  pos: [-0.58, -2.45, 0] },
+  { sz: [0.04, 0.4, 1.0],  pos: [ 0.58, -2.45, 0] },
+];
+ashWalls.forEach(w => {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(...w.sz), MAT.ashWall);
+  m.position.set(...w.pos);
+  m.castShadow = m.receiveShadow = true;
+  m.userData.part = 'ashPit';
+  interiorGroup.add(m);
+});
+// Pile of grey ash inside the pit
+const ashPile = new THREE.Mesh(
+  new THREE.SphereGeometry(0.35, 12, 8, 0, Math.PI*2, 0, Math.PI/2),
+  new THREE.MeshStandardMaterial({ color: '#807870', roughness: 1, metalness: 0 })
+);
+ashPile.scale.set(1.3, 0.4, 1.0);
+ashPile.position.set(0, -2.50, 0);
+ashPile.userData.part = 'ashPit';
+interiorGroup.add(ashPile);
+// Ash dump grate in firebox floor (cast iron grid)
+const ashGrate = new THREE.Mesh(
+  new THREE.BoxGeometry(0.25, 0.025, 0.25), castIronMat
+);
+ashGrate.position.set(0, -2.16, 0);
+ashGrate.userData.part = 'ashPit';
+interiorGroup.add(ashGrate);
+
+currentPart = 'lintel';
+// 3. STEEL ANGLE IRON LINTEL (L-shaped beam supporting masonry above firebox opening)
+const lintelH = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.04, 0.10), steelMat);
+lintelH.position.set(0, -0.90, 0.48);
+lintelH.userData.part = 'lintel';
+interiorGroup.add(lintelH);
+const lintelV = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.10, 0.04), steelMat);
+lintelV.position.set(0, -0.95, 0.55);
+lintelV.userData.part = 'lintel';
+interiorGroup.add(lintelV);
+
+currentPart = 'smokeChamber';
+// 4. CORBELED SMOKE CHAMBER — soot-darkened brick corbels stepping inward (visible funnel shape)
+const sootMat = new THREE.MeshStandardMaterial({
+  color: '#3a2418', roughness: 0.92, metalness: 0, envMapIntensity: 0.3,
+});
+const corbels = [
+  { sz: [1.10, 0.07, 0.95], y: -0.92 },
+  { sz: [0.95, 0.07, 0.82], y: -0.84 },
+  { sz: [0.78, 0.07, 0.68], y: -0.76 },
+  { sz: [0.62, 0.07, 0.55], y: -0.68 },
+  { sz: [0.48, 0.07, 0.42], y: -0.60 },
+  { sz: [0.36, 0.07, 0.32], y: -0.52 },
+];
+corbels.forEach((c, idx) => {
+  // Alternating slightly lighter/darker for visible course distinction
+  const mat = sootMat.clone();
+  mat.color.setHex(idx % 2 === 0 ? 0x3a2418 : 0x4a2c18);
+  const m = new THREE.Mesh(new THREE.BoxGeometry(...c.sz), mat);
+  m.position.set(0, c.y, 0);
+  m.castShadow = m.receiveShadow = true;
+  m.userData.part = 'smokeChamber';
+  interiorGroup.add(m);
+});
+
+// 5. SMOKE SHELF — EXPLICIT TAGGING so it doesn't get caught by damper inferPart range
+const smokeShelf = new THREE.Mesh(
+  new THREE.BoxGeometry(0.95, 0.06, 0.32), sootMat
+);
+smokeShelf.position.set(0, -1.04, -0.18);
+smokeShelf.castShadow = smokeShelf.receiveShadow = true;
+smokeShelf.userData.part = 'smokeChamber';
+interiorGroup.add(smokeShelf);
+
+currentPart = 'damper';
+// ============================================================================
+//  6. CAST IRON THROAT DAMPER — proper 3D model with frame, ribbed blade,
+//     pivot rod, operating poker, and notched position holder.
+//     Built per Vestal/Donley/Majestic-style real masonry throat damper.
+// ============================================================================
+const DAMPER_Y = -1.00;
+const FRAME_W = 1.0, FRAME_D = 0.42;
+const FRAME_THICK = 0.025;
+const damperGroup = new THREE.Group();
+damperGroup.userData.part = 'damper';
+interiorGroup.add(damperGroup);
+
+// --- FRAME: heavy cast-iron rectangular collar with raised lip ---
+// Top rim (where the blade seals when closed)
+const frameTopFront = new THREE.Mesh(
+  new THREE.BoxGeometry(FRAME_W, FRAME_THICK, 0.04), castIronMat
+);
+frameTopFront.position.set(0, DAMPER_Y, FRAME_D/2 - 0.02);
+frameTopFront.userData.part = 'damper';
+damperGroup.add(frameTopFront);
+const frameTopBack = new THREE.Mesh(
+  new THREE.BoxGeometry(FRAME_W, FRAME_THICK, 0.04), castIronMat
+);
+frameTopBack.position.set(0, DAMPER_Y, -FRAME_D/2 + 0.02);
+frameTopBack.userData.part = 'damper';
+damperGroup.add(frameTopBack);
+// Side rails
+for (const sx of [-1, 1]) {
+  const rail = new THREE.Mesh(
+    new THREE.BoxGeometry(0.04, FRAME_THICK, FRAME_D - 0.08), castIronMat
+  );
+  rail.position.set(sx * (FRAME_W/2 - 0.02), DAMPER_Y, 0);
+  rail.userData.part = 'damper';
+  damperGroup.add(rail);
+}
+// Outer skirt (descends below the frame to seal the throat)
+const frameSkirtFront = new THREE.Mesh(
+  new THREE.BoxGeometry(FRAME_W, 0.08, 0.018), castIronMat
+);
+frameSkirtFront.position.set(0, DAMPER_Y - 0.05, FRAME_D/2);
+frameSkirtFront.userData.part = 'damper';
+damperGroup.add(frameSkirtFront);
+const frameSkirtBack = new THREE.Mesh(
+  new THREE.BoxGeometry(FRAME_W, 0.08, 0.018), castIronMat
+);
+frameSkirtBack.position.set(0, DAMPER_Y - 0.05, -FRAME_D/2);
+frameSkirtBack.userData.part = 'damper';
+damperGroup.add(frameSkirtBack);
+for (const sx of [-1, 1]) {
+  const skirtSide = new THREE.Mesh(
+    new THREE.BoxGeometry(0.018, 0.08, FRAME_D), castIronMat
+  );
+  skirtSide.position.set(sx * FRAME_W/2, DAMPER_Y - 0.05, 0);
+  skirtSide.userData.part = 'damper';
+  damperGroup.add(skirtSide);
+}
+
+// --- PIVOT ROD: horizontal cast iron rod across the frame ---
+const damperPivot = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.012, 0.012, FRAME_W + 0.05, 14), castIronMat
+);
+damperPivot.rotation.z = Math.PI / 2;
+damperPivot.position.set(0, DAMPER_Y + 0.005, 0);
+damperPivot.userData.part = 'damper';
+damperGroup.add(damperPivot);
+
+// --- BLADE: ribbed cast iron plate, hinged on pivot, OPEN (per gas code) ---
+//   Modeled as a sub-group rotated around the pivot's X axis (here -65° from horizontal
+//   = mostly open). Includes a thick body, 3 reinforcement ribs underneath, and a curved
+//   counterweight ball on the back side.
+const bladeGroup = new THREE.Group();
+bladeGroup.position.set(0, DAMPER_Y + 0.005, 0);
+bladeGroup.rotation.x = -Math.PI / 2.5;          // wide open (~72°)
+bladeGroup.userData.part = 'damper';
+damperGroup.add(bladeGroup);
+// Main blade body
+const bladeMain = new THREE.Mesh(
+  new THREE.BoxGeometry(FRAME_W - 0.08, 0.018, FRAME_D - 0.06), castIronMat
+);
+bladeMain.position.set(0, 0, 0);
+bladeMain.castShadow = bladeMain.receiveShadow = true;
+bladeMain.userData.part = 'damper';
+bladeGroup.add(bladeMain);
+// 3 reinforcement ribs (running front-to-back on the underside)
+for (const rx of [-0.30, 0, 0.30]) {
+  const rib = new THREE.Mesh(
+    new THREE.BoxGeometry(0.025, 0.018, FRAME_D - 0.06), castIronMat
+  );
+  rib.position.set(rx, -0.014, 0);
+  rib.userData.part = 'damper';
+  bladeGroup.add(rib);
+}
+// Raised edge lip on the front (seats against frame when closed)
+const bladeLip = new THREE.Mesh(
+  new THREE.BoxGeometry(FRAME_W - 0.08, 0.020, 0.018), castIronMat
+);
+bladeLip.position.set(0, 0.008, FRAME_D/2 - 0.04);
+bladeLip.userData.part = 'damper';
+bladeGroup.add(bladeLip);
+// Counterweight ball — helps blade stay open
+const counterweight = new THREE.Mesh(
+  new THREE.SphereGeometry(0.025, 12, 8), castIronMat
+);
+counterweight.position.set(0, -0.012, -FRAME_D/2 + 0.04);
+counterweight.userData.part = 'damper';
+bladeGroup.add(counterweight);
+
+// --- OPERATING POKER: long thin rod hanging into the firebox (user reaches up) ---
+const pokerRod = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.008, 0.008, 0.55, 10), castIronMat
+);
+pokerRod.position.set(0.35, DAMPER_Y - 0.28, 0.16);
+pokerRod.userData.part = 'damper';
+damperGroup.add(pokerRod);
+// Cast iron handle ring at bottom of poker
+const pokerRing = new THREE.Mesh(
+  new THREE.TorusGeometry(0.028, 0.006, 6, 18), castIronMat
+);
+pokerRing.position.set(0.35, DAMPER_Y - 0.55, 0.16);
+pokerRing.rotation.x = Math.PI / 2;
+pokerRing.userData.part = 'damper';
+damperGroup.add(pokerRing);
+// Connecting tab at top of poker (mounts to blade via short link)
+const pokerLink = new THREE.Mesh(
+  new THREE.BoxGeometry(0.016, 0.10, 0.012), castIronMat
+);
+pokerLink.position.set(0.35, DAMPER_Y + 0.02, 0.12);
+pokerLink.userData.part = 'damper';
+damperGroup.add(pokerLink);
+
+// --- POSITION HOLDER: notched bracket with holes for the poker to rest in ---
+const holderBody = new THREE.Mesh(
+  new THREE.BoxGeometry(0.045, 0.20, 0.022), castIronMat
+);
+holderBody.position.set(0.42, DAMPER_Y - 0.12, 0.16);
+holderBody.userData.part = 'damper';
+damperGroup.add(holderBody);
+// 5 notch indicators (small flat squares to show open/half/closed positions)
+for (let i = 0; i < 5; i++) {
+  const notch = new THREE.Mesh(
+    new THREE.BoxGeometry(0.012, 0.008, 0.008),
+    new THREE.MeshStandardMaterial({ color: '#0a0a0a', roughness: 0.9, metalness: 0.2 }),
+  );
+  notch.position.set(0.42, DAMPER_Y - 0.04 - i * 0.035, 0.172);
+  notch.userData.part = 'damper';
+  damperGroup.add(notch);
+}
+
+// --- 4 CORNER GUSSETS: triangular brackets reinforcing the frame ---
+for (const sx of [-1, 1]) {
+  for (const sz of [-1, 1]) {
+    const gusset = new THREE.Mesh(
+      new THREE.BoxGeometry(0.035, 0.025, 0.035), castIronMat
+    );
+    gusset.position.set(sx * (FRAME_W/2 - 0.025), DAMPER_Y + 0.012, sz * (FRAME_D/2 - 0.025));
+    gusset.userData.part = 'damper';
+    damperGroup.add(gusset);
+  }
+}
+
+currentPart = 'flueTiles';
+// 7. STACKED CLAY FLUE TILES (hollow rectangular ceramic, traditional chimney lining)
+function buildFlueTile(centerY, height) {
+  const wallT = 0.025;
+  const innerHW = 0.13, innerHD = 0.13;
+  const grp = new THREE.Group();
+  // 4 walls forming a rectangular tube
+  const front = new THREE.Mesh(
+    new THREE.BoxGeometry((innerHW + wallT)*2, height, wallT), clayTileMat);
+  front.position.set(0, centerY, innerHD + wallT/2);
+  front.castShadow = front.receiveShadow = true;
+  grp.add(front);
+  const back = front.clone();
+  back.position.set(0, centerY, -(innerHD + wallT/2));
+  grp.add(back);
+  const left = new THREE.Mesh(
+    new THREE.BoxGeometry(wallT, height, innerHD*2), clayTileMat);
+  left.position.set(-(innerHW + wallT/2), centerY, 0);
+  left.castShadow = left.receiveShadow = true;
+  grp.add(left);
+  const right = left.clone();
+  right.position.set(innerHW + wallT/2, centerY, 0);
+  grp.add(right);
+  return grp;
+}
+// Stack 7 tiles from smoke chamber top to under the cap, with visible mortar joints
+const FLUE_TILE_H = 0.60;
+const FLUE_JOINT = 0.012;
+const FLUE_START_Y = -0.45;
+const mortarJointMat = new THREE.MeshStandardMaterial({
+  color: '#3a2418', roughness: 1, metalness: 0,
+});
+for (let i = 0; i < 8; i++) {
+  const cy = FLUE_START_Y + (FLUE_TILE_H + FLUE_JOINT) * (i + 0.5);
+  if (cy + FLUE_TILE_H/2 > 3.43) break;   // stack flue tiles right up to the cap base
+  const tg = buildFlueTile(cy, FLUE_TILE_H);
+  tg.userData.part = 'flueTiles';
+  tg.traverse(o => { if (o.isMesh) o.userData.part = 'flueTiles'; });
+  interiorGroup.add(tg);
+  if (i < 7) {
+    const jointY = cy + FLUE_TILE_H/2 + FLUE_JOINT/2;
+    const joint = new THREE.Mesh(
+      new THREE.BoxGeometry(0.32, FLUE_JOINT, 0.32), mortarJointMat
+    );
+    joint.position.set(0, jointY, 0);
+    joint.userData.part = 'flueTiles';
+    interiorGroup.add(joint);
+  }
+}
+
+currentPart = 'flueLiner';
+// 8. MODERN STAINLESS LINER — runs the FULL length from smoke chamber top (y=-0.4)
+//    up to the cap base (y=3.43). No gap at the top.
+const _LINER_BOT_Y = -0.45;
+const _LINER_TOP_Y =  3.42;                       // just below cap base (3.43)
+const _LINER_LEN   = _LINER_TOP_Y - _LINER_BOT_Y;  // ≈ 3.87
+const _LINER_CY    = (_LINER_TOP_Y + _LINER_BOT_Y) / 2;
+const liner = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.10, 0.10, _LINER_LEN, 24, 1, true),
+  linerMat
+);
+liner.position.set(0, _LINER_CY, 0);
+liner.castShadow = liner.receiveShadow = true;
+liner.userData.part = 'flueLiner';
+interiorGroup.add(liner);
+
+// 9. INSULATION WRAP — matches the new liner length (cross-section only)
+const insulation = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.12, 0.12, _LINER_LEN - 0.04, 18, 1, true),
+  insulationMat
+);
+insulation.position.set(0, _LINER_CY, 0);
+insulation.userData.part = 'flueInsulation';
+insulation.userData.crossSectionOnly = true;
+interiorGroup.add(insulation);
+
+// 10. AIR SPACE indicator (between flue tiles and outer brick — code-required gap)
+// Visible as a subtle gap in cross-section; we just leave the empty space
+
+currentPart = 'cleanout';
+// 11. CLEANOUT DOOR (small cast iron door at the base of chimney, accesses ash pit)
+const cleanoutFrame = new THREE.Mesh(
+  new THREE.BoxGeometry(0.04, 0.30, 0.30), castIronMat
+);
+cleanoutFrame.position.set(-0.95, -2.45, 0);
+cleanoutFrame.castShadow = cleanoutFrame.receiveShadow = true;
+interiorGroup.add(cleanoutFrame);
+// Door panel (slightly recessed)
+const cleanoutDoor = new THREE.Mesh(
+  new THREE.BoxGeometry(0.025, 0.26, 0.26), castIronMat
+);
+cleanoutDoor.position.set(-0.97, -2.45, 0);
+interiorGroup.add(cleanoutDoor);
+// Door handle — POLISHED BRASS to contrast against the dark iron door
+const cleanoutHandle = new THREE.Mesh(
+  new THREE.TorusGeometry(0.04, 0.012, 8, 16), MAT.brass
+);
+cleanoutHandle.rotation.y = Math.PI / 2;
+cleanoutHandle.position.set(-1.005, -2.45, 0.10);
+cleanoutHandle.userData.part = 'cleanout';
+interiorGroup.add(cleanoutHandle);
+// Handle backing plate (smaller brass disk)
+const handleBack = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.020, 0.020, 0.008, 12), MAT.brass
+);
+handleBack.rotation.z = Math.PI / 2;
+handleBack.position.set(-1.00, -2.45, 0.10);
+handleBack.userData.part = 'cleanout';
+interiorGroup.add(handleBack);
+// 2 hinges on the door (visible cast iron pivots with bolt heads)
+for (const hy of [-2.55, -2.35]) {
+  const hinge = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.015, 0.015, 0.05, 10), castIronMat
+  );
+  hinge.rotation.z = Math.PI / 2;
+  hinge.position.set(-0.98, hy, -0.13);
+  hinge.userData.part = 'cleanout';
+  interiorGroup.add(hinge);
+  // Bolt head on hinge
+  const bolt = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.008, 0.008, 0.008, 6), MAT.brass
+  );
+  bolt.rotation.z = Math.PI / 2;
+  bolt.position.set(-1.005, hy, -0.13);
+  bolt.userData.part = 'cleanout';
+  interiorGroup.add(bolt);
+}
+// Latch lever (small brass protrusion above handle)
+const latchLever = new THREE.Mesh(
+  new THREE.BoxGeometry(0.025, 0.04, 0.025), MAT.brass
+);
+latchLever.position.set(-1.00, -2.40, 0.04);
+latchLever.userData.part = 'cleanout';
+interiorGroup.add(latchLever);
+
+currentPart = 'flashing';
+// ============== FULL ROOF + FLASHING SYSTEM ==============
+// When user clicks "Flashing" X-ray, they see the WHOLE assembly:
+// roof intersecting chimney + 5 types of flashing (apron, step, counter, cricket, cap).
+
+const flashLevel = 2.4;
+const ROOF_PITCH = Math.PI / 9;  // ~20° slope
+
+// 1. SHINGLE TEXTURE (procedural CanvasTexture for the roof) — ORIGINAL dark-brown
+//    asphalt look. Only the filter/anisotropy settings are upgraded to fix pixelation.
+function makeShingleTexture() {
+  const cv = document.createElement('canvas');
+  cv.width = 1024; cv.height = 1024;
+  const c = cv.getContext('2d');
+  c.fillStyle = '#221608';
+  c.fillRect(0, 0, 1024, 1024);
+  // Rows of shingles with staggered offset
+  const rowH = 64;
+  const colW = 96;
+  for (let r = 0; r < 16; r++) {
+    for (let cidx = 0; cidx < 12; cidx++) {
+      const offX = (r % 2) * colW / 2;
+      const x = cidx * colW + offX;
+      const y = r * rowH;
+      const tint = 28 + Math.random() * 30;
+      c.fillStyle = `rgb(${tint + 8},${tint - 4},${tint - 12})`;
+      c.fillRect(x, y, colW - 3, rowH - 4);
+      // Shadow line at bottom of each shingle
+      c.fillStyle = 'rgba(0,0,0,0.7)';
+      c.fillRect(x, y + rowH - 4, colW, 3);
+      // Texture grain (random small spots)
+      for (let k = 0; k < 6; k++) {
+        c.fillStyle = `rgba(0,0,0,${0.2 + Math.random()*0.3})`;
+        c.fillRect(x + Math.random()*colW, y + Math.random()*rowH, 1, 1);
+      }
+    }
+  }
+  const tex = new THREE.CanvasTexture(cv);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(2, 1.5);
+  // Upgrade filter chain only — keeps the same look but eliminates pixelation
+  tex.anisotropy = 16;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = true;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+const SHINGLE_TEX = makeShingleTexture();
+
+// 2. SLOPED ROOF — ONE single ShapeGeometry with a rectangular HOLE for the chimney.
+//    Using a single mesh (instead of 4 strips) means there's literally NO seam between
+//    sections — the shingle texture flows continuously around the hole, and the
+//    geometry is one continuous surface. Uses ExtrudeGeometry for slight thickness.
+const ROOF_T = 0.12;
+const ROOF_Y = flashLevel - 0.05;
+const HOLE_HX = 0.955, HOLE_HZ = 0.505;          // hole half-extents — chimney + 5mm margin
+const ROOF_HX = 4.5, ROOF_Z_BACK = -3.45, ROOF_Z_FRONT = 3.05;
+
+// Build the shape in 2D (XY plane). X = worldX, Y = -worldZ (because we'll rotate -90°
+// around X, which maps shape +Y to world -Z).
+const roofShape = new THREE.Shape();
+roofShape.moveTo(-ROOF_HX, -ROOF_Z_FRONT);
+roofShape.lineTo( ROOF_HX, -ROOF_Z_FRONT);
+roofShape.lineTo( ROOF_HX, -ROOF_Z_BACK);
+roofShape.lineTo(-ROOF_HX, -ROOF_Z_BACK);
+roofShape.closePath();
+const roofHole = new THREE.Path();
+roofHole.moveTo(-HOLE_HX, -HOLE_HZ);
+roofHole.lineTo( HOLE_HX, -HOLE_HZ);
+roofHole.lineTo( HOLE_HX,  HOLE_HZ);
+roofHole.lineTo(-HOLE_HX,  HOLE_HZ);
+roofHole.closePath();
+roofShape.holes.push(roofHole);
+
+// Custom UV generator — maps WORLD coords to UVs at a fixed tile size so shingles
+// are the SAME PHYSICAL SIZE everywhere (per world unit, not per face), with
+// RepeatWrapping ensuring continuous pattern.
+const ROOF_TILE = 4.5;   // shingle texture covers a 4.5m × 4.5m patch — bigger shingles
+const roofUVGenerator = {
+  generateTopUV(geometry, vertices, indexA, indexB, indexC) {
+    const ax = vertices[indexA * 3], ay = vertices[indexA * 3 + 1];
+    const bx = vertices[indexB * 3], by = vertices[indexB * 3 + 1];
+    const cx = vertices[indexC * 3], cy = vertices[indexC * 3 + 1];
+    return [
+      new THREE.Vector2(ax / ROOF_TILE,  ay / ROOF_TILE),
+      new THREE.Vector2(bx / ROOF_TILE,  by / ROOF_TILE),
+      new THREE.Vector2(cx / ROOF_TILE,  cy / ROOF_TILE),
+    ];
+  },
+  generateSideWallUV(geometry, vertices, a, b, c, d) {
+    // Simple side-wall UVs (fascia is hidden by the fascia trim anyway)
+    return [
+      new THREE.Vector2(0, 0), new THREE.Vector2(1, 0),
+      new THREE.Vector2(1, 1), new THREE.Vector2(0, 1),
+    ];
+  },
+};
+
+const roofGeo = new THREE.ExtrudeGeometry(roofShape, {
+  depth: ROOF_T,
+  bevelEnabled: false,
+  UVGenerator: roofUVGenerator,
+});
+// ExtrudeGeometry extrudes along +Z in shape-local. We want it lying flat with normal +Y.
+// Rotate -90° around X → shape's XY plane lays in XZ plane, normal +Y. Then shape's Y maps
+// to world -Z (we already inverted Z in the shape coords above so this works out).
+roofGeo.rotateX(-Math.PI / 2);
+// Center thickness around y=0 (extrude goes 0 to ROOF_T; rotate moves to -ROOF_T to 0).
+roofGeo.translate(0, ROOF_T / 2, 0);
+
+// Material — single texture with WRAP so the UV mapping above tiles seamlessly.
+// Use the SHARED texture directly (no clone) so we don't lose mipmaps/filter settings
+// and so we get the best texture cache hit.
+const roofMat = new THREE.MeshStandardMaterial({
+  map: SHINGLE_TEX, color: 0xffffff, roughness: 0.92, metalness: 0,
+});
+const roofMain = new THREE.Mesh(roofGeo, roofMat);
+roofMain.rotation.x = ROOF_PITCH;          // tilt back-high (POSITIVE = back higher)
+roofMain.position.set(0, ROOF_Y, -0.2);    // same pivot as the old roof
+roofMain.castShadow = roofMain.receiveShadow = true;
+roofMain.userData.part = 'flashing';
+roofMain.userData.contextOnly = true;
+interiorGroup.add(roofMain);
+
+// Fascia at the FRONT (eaves edge, low side)
+const fasciaMat = new THREE.MeshStandardMaterial({ color: '#1a0a04', roughness: 0.9 });
+const fasciaFront = new THREE.Mesh(
+  new THREE.BoxGeometry(9, 0.20, 0.05), fasciaMat
+);
+// Front edge of roof at z=+3.05, y dropped by tilt sin(pitch)*3.25
+const fasciaZ = 3.05;
+const fasciaY = flashLevel - 0.08 - 3.25 * Math.sin(ROOF_PITCH);
+fasciaFront.position.set(0, fasciaY, fasciaZ);
+fasciaFront.rotation.x = ROOF_PITCH;
+fasciaFront.userData.part = 'flashing';
+fasciaFront.userData.contextOnly = true;
+interiorGroup.add(fasciaFront);
+
+// Ridge cap at the BACK (apex of slope)
+const ridgeCap = new THREE.Mesh(
+  new THREE.BoxGeometry(9, 0.07, 0.18),
+  new THREE.MeshStandardMaterial({ color: '#1a0e06', roughness: 0.9, metalness: 0 })
+);
+const ridgeZ = -3.30;
+const ridgeY = flashLevel - 0.05 + 3.10 * Math.sin(ROOF_PITCH);
+ridgeCap.position.set(0, ridgeY, ridgeZ);
+ridgeCap.rotation.x = ROOF_PITCH;
+ridgeCap.userData.part = 'flashing';
+ridgeCap.userData.contextOnly = true;
+interiorGroup.add(ridgeCap);
+
+// Helper: compute y on the roof surface at a given z (back-high pitch).
+// roofYAt = center; roofTopAt = visible top surface (where flashing sits ON the shingles).
+const roofYAt = (z) => flashLevel - 0.05 - (z - (-0.2)) * Math.sin(ROOF_PITCH);
+const roofTopAt = (z) => roofYAt(z) + 0.05 / Math.cos(ROOF_PITCH);  // ~+0.053
+
+// Chimney face X positions (so flashing can TOUCH the brick, not float in air)
+const CHIM_HALF_X = 0.95;  // body half-width 1.9/2
+
+// 3. APRON FLASHING (front/low side) — properly connected L: vertical sits on roof,
+//    horizontal extends from same bottom outward — they MEET at the bend.
+//    WIDTH = chimney width (1.90), so the apron ENDS exactly at the chimney corners;
+//    the rounded corner pieces (section 7 below) take over from there.
+const APRON_W = 1.90;                // exact chimney width
+const apronRoofY = roofTopAt(0.50);  // roof top at chimney FRONT face (z=+0.5)
+const APRON_VERT_H = 0.30;           // vertical face height
+const apronVertY  = apronRoofY + APRON_VERT_H / 2;  // center of vertical face
+// Vertical face — bottom touches roof, top extends 30cm up the chimney
+const apronFace = new THREE.Mesh(
+  new THREE.BoxGeometry(APRON_W, APRON_VERT_H, 0.022), MAT.steel
+);
+apronFace.position.set(0, apronVertY, 0.500);
+apronFace.userData.part = 'flashing';
+interiorGroup.add(apronFace);
+// L-bend chamfer right at the corner where vertical meets horizontal (on the roof line)
+const apronBend = new THREE.Mesh(
+  new THREE.BoxGeometry(APRON_W, 0.04, 0.055), MAT.steel
+);
+apronBend.position.set(0, apronRoofY + 0.01, 0.519);
+apronBend.rotation.x = -Math.PI / 4;
+apronBend.userData.part = 'flashing';
+interiorGroup.add(apronBend);
+// Horizontal flange — extends from chimney base outward across roof.
+// Slightly narrower than chimney so it tucks UNDER the step-flange at the corners
+// rather than poking out past them.
+const apronHorizZ = 0.50 + 0.42 / 2;
+const apronHoriz = new THREE.Mesh(
+  new THREE.BoxGeometry(APRON_W - 0.04, 0.022, 0.42), MAT.steel
+);
+apronHoriz.position.set(0, roofTopAt(apronHorizZ) + 0.012, apronHorizZ);
+apronHoriz.rotation.x = ROOF_PITCH;
+apronHoriz.userData.part = 'flashing';
+interiorGroup.add(apronHoriz);
+// Rivets on the vertical face (4 visible brass bolts NEAR THE TOP of the vertical)
+for (const x of [-0.75, -0.25, 0.25, 0.75]) {
+  const rivet = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.012, 0.012, 0.012, 8), MAT.brass
+  );
+  rivet.position.set(x, apronVertY + APRON_VERT_H/2 - 0.04, 0.514);
+  rivet.userData.part = 'flashing';
+  interiorGroup.add(rivet);
+}
+
+// 4. STEP FLASHING (left + right) — each piece is a full L with rounded chamfer,
+//    pieces OVERLAP in z so they're visually continuous, no gaps or "trampling".
+//    Pieces are CLIPPED at the chimney front/back corners (z = ±0.50) so they never
+//    poke past them and cross the apron/cricket pieces.
+const STEPS = 8;
+const STEP_SPAN_START = 0.46;    // forward end of the strip (just inside z=+0.50)
+const STEP_SPAN_END   = -0.46;   // back end (just inside z=-0.50)
+const stepLen = (STEP_SPAN_START - STEP_SPAN_END) / STEPS;
+const pieceDepthRaw = stepLen + 0.075;   // 7.5cm overlap between adjacent pieces
+const flangeWidth = 0.42;
+for (const side of [-1, 1]) {
+  for (let i = 0; i < STEPS; i++) {
+    const zCenterRaw = STEP_SPAN_START - i * stepLen - stepLen/2;
+    // CLIP this piece to the chimney bounds so its ends never poke past the corner
+    const pieceFront = Math.min(zCenterRaw + pieceDepthRaw/2,  0.48);
+    const pieceBack  = Math.max(zCenterRaw - pieceDepthRaw/2, -0.48);
+    const pieceDepth = pieceFront - pieceBack;
+    const zCenter    = (pieceFront + pieceBack) / 2;
+    const yRoofTop = roofTopAt(zCenter);
+
+    // Vertical face — extends from below roof (overlapping bend) up the chimney
+    const stepV = new THREE.Mesh(
+      new THREE.BoxGeometry(0.022, 0.28, pieceDepth), MAT.steel
+    );
+    stepV.position.set(side * CHIM_HALF_X, yRoofTop + 0.13, zCenter);
+    stepV.userData.part = 'flashing';
+    interiorGroup.add(stepV);
+
+    // CHAMFER L-BEND — angled piece bridging vertical and horizontal smoothly
+    const bend = new THREE.Mesh(
+      new THREE.BoxGeometry(0.06, 0.045, pieceDepth + 0.005), MAT.steel
+    );
+    bend.position.set(side * (CHIM_HALF_X + 0.024), yRoofTop + 0.022, zCenter);
+    bend.rotation.z = side * Math.PI / 4;  // 45° angle bridging vert and horiz
+    bend.userData.part = 'flashing';
+    interiorGroup.add(bend);
+
+    // Horizontal flange — extends from chimney base outward across the roof, OVERLAPS adjacent pieces
+    const flangeCenterX = side * (CHIM_HALF_X + flangeWidth / 2 + 0.01);
+    const stepH = new THREE.Mesh(
+      new THREE.BoxGeometry(flangeWidth, 0.022, pieceDepth), MAT.steel
+    );
+    stepH.position.set(flangeCenterX, yRoofTop + 0.018, zCenter);
+    stepH.rotation.x = ROOF_PITCH;
+    stepH.userData.part = 'flashing';
+    interiorGroup.add(stepH);
+
+    // 2 rivets per piece on vertical face
+    for (const ry of [-0.05, 0.05]) {
+      const rivet = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.010, 0.010, 0.010, 8), MAT.brass
+      );
+      rivet.position.set(side * (CHIM_HALF_X + 0.013), yRoofTop + 0.20 + ry, zCenter);
+      rivet.rotation.z = Math.PI / 2;
+      rivet.userData.part = 'flashing';
+      interiorGroup.add(rivet);
+    }
+  }
+}
+
+// 5. COUNTER-FLASHING — each piece sits DIRECTLY above its corresponding flashing.
+//    Embedded into mortar joint, covers the top edge of step/apron/cricket flashing.
+//    No more single high band — each side has its own appropriate height.
+const COUNTER_H = 0.06;
+const COUNTER_DEPTH = 0.022;
+
+// FRONT counter-flashing — covers the top of apron face (right above apron vertical top)
+// Same width as apron (1.90 = chimney width) so it ends at the corners, not past them.
+const frontCounterY = apronVertY + APRON_VERT_H/2 + 0.04;
+const frontCounter = new THREE.Mesh(
+  new THREE.BoxGeometry(APRON_W, COUNTER_H, COUNTER_DEPTH), MAT.stainlessDark
+);
+frontCounter.position.set(0, frontCounterY, 0.505);
+frontCounter.userData.part = 'flashing';
+interiorGroup.add(frontCounter);
+// Front drip hem (slight outward bend) — barely wider than counter, no corner overshoot
+const frontHem = new THREE.Mesh(
+  new THREE.BoxGeometry(APRON_W + 0.02, 0.012, 0.020), MAT.stainlessDark
+);
+frontHem.position.set(0, frontCounterY - COUNTER_H/2 - 0.005, 0.514);
+frontHem.rotation.x = -Math.PI / 8;
+frontHem.userData.part = 'flashing';
+interiorGroup.add(frontHem);
+
+// (REMOVED back counter-flashing band — cricket's own closer triangle covers the back
+//  side seal. A horizontal band above the cricket peak appeared as a floating line.)
+
+// LEFT + RIGHT step-counter-flashing — overlapping pieces, each above its step flashing.
+// CLIPPED to chimney bounds (same as the step flashing below them) so corners stay clean.
+const COUNTER_PIECE_DEPTH_RAW = stepLen + 0.075;
+for (const side of [-1, 1]) {
+  for (let i = 0; i < STEPS; i++) {
+    const zCenterRaw = STEP_SPAN_START - i * stepLen - stepLen/2;
+    const pieceFront = Math.min(zCenterRaw + COUNTER_PIECE_DEPTH_RAW/2,  0.48);
+    const pieceBack  = Math.max(zCenterRaw - COUNTER_PIECE_DEPTH_RAW/2, -0.48);
+    const pieceDepth = pieceFront - pieceBack;
+    const zCenter    = (pieceFront + pieceBack) / 2;
+    const yRoofTop = roofTopAt(zCenter);
+    const stepTopY = yRoofTop + 0.28 + 0.04;  // just above step vertical's top
+    // Counter-flashing piece
+    const sc = new THREE.Mesh(
+      new THREE.BoxGeometry(COUNTER_DEPTH, COUNTER_H, pieceDepth),
+      MAT.stainlessDark
+    );
+    sc.position.set(side * CHIM_HALF_X - side * 0.011, stepTopY, zCenter);
+    sc.userData.part = 'flashing';
+    interiorGroup.add(sc);
+    // Hem at the bottom (angled lip outward) — also overlaps adjacent pieces
+    const sh = new THREE.Mesh(
+      new THREE.BoxGeometry(0.020, 0.012, pieceDepth + 0.01), MAT.stainlessDark
+    );
+    sh.position.set(side * CHIM_HALF_X + side * 0.010, stepTopY - COUNTER_H/2 - 0.005, zCenter);
+    sh.rotation.z = side * Math.PI / 8;
+    sh.userData.part = 'flashing';
+    interiorGroup.add(sh);
+  }
+}
+
+// 6. CRICKET (chimney saddle) — proper tent with shingle texture, no extra skirts
+(function buildCricket() {
+  const cw = 1.12;        // wider — extends slightly past chimney for prominence
+  const cz = -0.52;       // chimney back face Z
+  const ridgeLen = 1.50;  // longer ridge for substantial size
+  const backZ = cz - ridgeLen;
+  const baseYChimney = roofTopAt(cz);   // sit on top of roof shingles, not center
+  const baseYBack    = roofTopAt(backZ);
+  const peakRise     = 0.55;  // peak just above base — STAYS BELOW the cap so they
+                              //  don't touch. Must still be > ridgeLen * sin(pitch) = 0.51.
+  const peakY        = baseYChimney + peakRise;
+
+  // 8 vertices — duplicates of peak and back-ridge for separate UVs on each slope
+  const v = new Float32Array([
+    -cw, baseYChimney, cz,     // 0 chimney back-LEFT
+     cw, baseYChimney, cz,     // 1 chimney back-RIGHT
+     0,  peakY,        cz,     // 2 PEAK (left slope copy)
+     0,  baseYBack,    backZ,  // 3 ridge end at back (left slope copy)
+    -cw, baseYBack,    backZ,  // 4 back-LEFT
+     cw, baseYBack,    backZ,  // 5 back-RIGHT
+     0,  peakY,        cz,     // 6 PEAK (right slope copy — same coords as 2)
+     0,  baseYBack,    backZ,  // 7 ridge end at back (right slope copy)
+  ]);
+  // UVs — each slope quad maps to (0,0)-(1,1) for proper shingle texture
+  const uv = new Float32Array([
+    0, 0,   // 0 chimney left, base
+    0, 0,   // 1 chimney right, base
+    0, 1,   // 2 peak (left copy)
+    1, 1,   // 3 back-ridge (left copy)
+    1, 0,   // 4 back-left
+    1, 0,   // 5 back-right
+    0, 1,   // 6 peak (right copy)
+    1, 1,   // 7 back-ridge (right copy)
+  ]);
+  const i = [
+    // LEFT slope quad (0,4,3,2)
+    0, 4, 3,
+    0, 3, 2,
+    // RIGHT slope quad (1,6,7,5) using the duplicated peak (6) and back ridge (7)
+    1, 6, 7,
+    1, 7, 5,
+  ];
+  const geo = new THREE.BufferGeometry();
+  geo.setIndex(i);
+  geo.setAttribute('position', new THREE.BufferAttribute(v, 3));
+  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  geo.computeVertexNormals();
+
+  // Cricket material — uses SHINGLE_TEX but with a slightly different tint
+  // so it reads as a separate roof element while matching the main roof
+  const cricketMat = new THREE.MeshStandardMaterial({
+    map: SHINGLE_TEX,
+    color: '#7a5838',   // warmer brown tint (vs roof at default white tint)
+    roughness: 0.92, metalness: 0, envMapIntensity: 0.4,
+    side: THREE.DoubleSide,
+  });
+  const cricket = new THREE.Mesh(geo, cricketMat);
+  cricket.castShadow = cricket.receiveShadow = true;
+  cricket.userData.part = 'flashing';
+  cricket.userData.contextOnly = true;
+  interiorGroup.add(cricket);
+
+  // RIDGE CAP — metal cap along the descending ridge (chimney→back)
+  const ridgeRun = Math.sqrt(ridgeLen*ridgeLen + (peakY - baseYBack)*(peakY - baseYBack));
+  const ridgeAngle = -Math.atan2(peakY - baseYBack, ridgeLen);
+  const cricketRidge = new THREE.Mesh(
+    new THREE.BoxGeometry(0.10, 0.05, ridgeRun),
+    new THREE.MeshStandardMaterial({ color: '#1a0e06', roughness: 0.85, metalness: 0 })
+  );
+  cricketRidge.position.set(0, (peakY + baseYBack) / 2 + 0.020, (cz + backZ) / 2);
+  cricketRidge.rotation.x = ridgeAngle;
+  cricketRidge.userData.part = 'flashing';
+  cricketRidge.userData.contextOnly = true;
+  interiorGroup.add(cricketRidge);
+
+  // VERTICAL CLOSER triangle against chimney back face — uses metal flashing material
+  const closerGeo = new THREE.BufferGeometry();
+  const closerV = new Float32Array([
+    -cw, baseYChimney, cz - 0.001,
+     cw, baseYChimney, cz - 0.001,
+     0,  peakY,        cz - 0.001,
+  ]);
+  closerGeo.setIndex([0, 1, 2]);
+  closerGeo.setAttribute('position', new THREE.BufferAttribute(closerV, 3));
+  closerGeo.computeVertexNormals();
+  const closer = new THREE.Mesh(closerGeo, MAT.stainlessDark);
+  closer.userData.part = 'flashing';
+  closer.userData.contextOnly = true;
+  interiorGroup.add(closer);
+})();
+
+// 7. ROUNDED CORNER FLASHING — at each of 4 chimney corners, a quarter-cylinder
+//    shell that smoothly wraps the brick corner. Replaces the sharp 90° meet of
+//    apron↔step and step↔cricket with a soft, continuous bend (like a real
+//    pre-formed lead corner boot).
+{
+  const CORNER_R   = 0.055;          // bend radius (visible curve)
+  const CORNER_H   = 0.32;           // matches step + apron vertical-face heights
+  // 4 corners — each gets thetaStart so the quarter-arc wraps the OUTSIDE of the corner
+  const corners = [
+    { sx: +1, sz: +1, thetaStart: 0,                 desc: 'front-right (apron↔step)' },
+    { sx: -1, sz: +1, thetaStart: Math.PI / 2,       desc: 'front-left (apron↔step)' },
+    { sx: -1, sz: -1, thetaStart: Math.PI,           desc: 'back-left (step↔cricket)' },
+    { sx: +1, sz: -1, thetaStart: 3 * Math.PI / 2,   desc: 'back-right (step↔cricket)' },
+  ];
+  for (const { sx, sz, thetaStart } of corners) {
+    const cornerX = sx * CHIM_HALF_X;
+    const cornerZ = sz * 0.50;
+    const yRoofTop = roofTopAt(cornerZ);
+
+    // Quarter-cylinder SHELL — vertical axis, 90° sweep around the outside
+    const bend = new THREE.Mesh(
+      new THREE.CylinderGeometry(
+        CORNER_R, CORNER_R, CORNER_H,
+        12, 1, true,           // open-ended shell
+        thetaStart, Math.PI / 2
+      ),
+      MAT.steel
+    );
+    bend.material = MAT.steel.clone();
+    bend.material.side = THREE.DoubleSide;
+    bend.position.set(cornerX, yRoofTop + CORNER_H / 2, cornerZ);
+    bend.castShadow = bend.receiveShadow = true;
+    bend.userData.part = 'flashing';
+    interiorGroup.add(bend);
+
+    // Top counter-flashing rim — a slightly larger quarter-ring above the bend, in darker
+    // stainless, so the corner reads as having a counter-flashing cap (matches the straight pieces).
+    const rim = new THREE.Mesh(
+      new THREE.CylinderGeometry(
+        CORNER_R + 0.006, CORNER_R + 0.006, 0.06,
+        12, 1, true,
+        thetaStart, Math.PI / 2
+      ),
+      MAT.stainlessDark.clone()
+    );
+    rim.material.side = THREE.DoubleSide;
+    rim.position.set(cornerX, yRoofTop + CORNER_H + 0.03, cornerZ);
+    rim.userData.part = 'flashing';
+    interiorGroup.add(rim);
+
+    // Bottom roof gusset — small curved flange where the bend meets the roof,
+    // tilted to follow the roof pitch (so it sits ON the shingles, not floating).
+    const gusset = new THREE.Mesh(
+      new THREE.RingGeometry(
+        CORNER_R, CORNER_R + 0.08,
+        12, 1,
+        thetaStart, Math.PI / 2
+      ),
+      MAT.steel.clone()
+    );
+    gusset.material.side = THREE.DoubleSide;
+    gusset.rotation.x = -Math.PI / 2 + ROOF_PITCH;   // lay flat on the sloped roof
+    gusset.position.set(cornerX, yRoofTop + 0.008, cornerZ);
+    gusset.userData.part = 'flashing';
+    interiorGroup.add(gusset);
+  }
+}
+
+// 13. (REMOVED inner masonry wall — was causing visual artifact in normal view.
+//      The body brick already renders correctly on the cross-section cut surface.)
+
+// 14. FIREBRICK FLOOR PATTERN already exists outside; visible in cross-section through cut
+
+// Materials that get clipped when cross-section is on
+const CLIP_MATS = [
+  'brickFront','brickJamb','brickBody','brickAged','brickFill','brickKick',
+  'concrete','concreteDark','stoneTan','stoneDark',
+  'wallPaint','woodMantle','woodFloor','stainless','stainlessAged','stainlessDark',
+  'metalCap','metalCapDark',
+  'refractory',
+  // Interior anatomy
+  'clayTile','fluLiner','insulation','castIron','steel','foundation','brass'
+];
+
+// ============== FIRE (custom shader flame) ==============
+const fireVertex = `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`;
+const fireFragment = `
+uniform float uTime; uniform vec3 uColorCool; uniform vec3 uColorHot; uniform float uAlpha;
+varying vec2 vUv;
+vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
+float snoise(vec3 v){const vec2 C=vec2(1.0/6.0,1.0/3.0);const vec4 D=vec4(0.0,0.5,1.0,2.0);vec3 i=floor(v+dot(v,C.yyy));vec3 x0=v-i+dot(i,C.xxx);vec3 g=step(x0.yzx,x0.xyz);vec3 l=1.0-g;vec3 i1=min(g.xyz,l.zxy);vec3 i2=max(g.xyz,l.zxy);vec3 x1=x0-i1+C.xxx;vec3 x2=x0-i2+C.yyy;vec3 x3=x0-D.yyy;i=mod289(i);vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));float n_=0.142857142857;vec3 ns=n_*D.wyz-D.xzx;vec4 j=p-49.0*floor(p*ns.z*ns.z);vec4 x_=floor(j*ns.z);vec4 y_=floor(j-7.0*x_);vec4 x=x_*ns.x+ns.yyyy;vec4 y=y_*ns.x+ns.yyyy;vec4 h=1.0-abs(x)-abs(y);vec4 b0=vec4(x.xy,y.xy);vec4 b1=vec4(x.zw,y.zw);vec4 s0=floor(b0)*2.0+1.0;vec4 s1=floor(b1)*2.0+1.0;vec4 sh=-step(h,vec4(0.0));vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;vec3 p0=vec3(a0.xy,h.x);vec3 p1=vec3(a0.zw,h.y);vec3 p2=vec3(a1.xy,h.z);vec3 p3=vec3(a1.zw,h.w);vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);m=m*m;return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));}
+void main(){
+  float h=clamp((1.0-vUv.y),0.0,1.0);
+  float n1=snoise(vec3(vUv*4.0,uTime*0.8));
+  float n2=snoise(vec3(vUv*8.0+5.0,uTime*1.5));
+  float n=n1*0.6+n2*0.4;
+  float edge=1.0-smoothstep(0.3,0.5,abs(vUv.x-0.5)*2.0);
+  float vert=smoothstep(0.0,0.6,h)*smoothstep(1.0,0.5,h);
+  vert+=n*0.25;
+  vec3 col=mix(uColorCool,uColorHot,h+n*0.3);
+  col=mix(col,vec3(1.0,1.0,0.9),pow(h,4.0));
+  float a=vert*edge*uAlpha;
+  gl_FragColor=vec4(col,clamp(a,0.0,1.0));
+}`;
+function flameLayer(w, hVal, c1, c2, alpha, y) {
+  const g = new THREE.PlaneGeometry(w, hVal, 16, 24);
+  const m = new THREE.ShaderMaterial({
+    uniforms: { uTime:{value:0}, uColorCool:{value:new THREE.Color(c1)}, uColorHot:{value:new THREE.Color(c2)}, uAlpha:{value:alpha} },
+    vertexShader: fireVertex, fragmentShader: fireFragment,
+    transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
+  });
+  const mesh = new THREE.Mesh(g, m);
+  mesh.position.set(0, y, 0.2);
+  mesh.userData.shader = m;
+  return mesh;
+}
+// 4 flame billboards at staggered rotations for volume — gives 3D feel from any angle
+const flame1 = flameLayer(1.05, 1.55, '#ff1808', '#ffe060', 1.4, -1.42);
+const flame2 = flameLayer(0.95, 1.45, '#ff3010', '#fff080', 1.3, -1.47);
+flame2.rotation.y = Math.PI / 2;
+const flame3 = flameLayer(0.85, 1.35, '#ff4014', '#ffd060', 1.15, -1.48);
+flame3.rotation.y = Math.PI / 4;
+const flame4 = flameLayer(0.75, 1.20, '#ff5018', '#fff5b0', 1.0, -1.50);
+flame4.rotation.y = -Math.PI / 4;
+// Tiny blue base hint (close to the coal bed — chemistry of combustion)
+const flameBase = flameLayer(0.55, 0.30, '#4060ff', '#a0c0ff', 0.55, -1.92);
+flameBase.userData.shader.uniforms.uColorHot.value.setHex(0xa0c0ff);
+scene.add(flame1); scene.add(flame2); scene.add(flame3); scene.add(flame4); scene.add(flameBase);
+
+const flameAll = [flame1, flame2, flame3, flame4, flameBase];
+
+// Embers
+const N_EMBERS = 200;
+const emberGeo = new THREE.BufferGeometry();
+const emberPos = new Float32Array(N_EMBERS * 3);
+const emberData = [];
+for (let i = 0; i < N_EMBERS; i++) {
+  emberPos[i*3] = (Math.random() - 0.5) * 0.7;
+  emberPos[i*3+1] = -2.0 + Math.random() * 0.3;
+  emberPos[i*3+2] = 0.15 + Math.random() * 0.3;
+  emberData.push({
+    speed: 0.6 + Math.random() * 1.6,
+    seed: i * 0.7 + Math.random(),
+    x0: emberPos[i*3], z0: emberPos[i*3+2],
+  });
+}
+emberGeo.setAttribute('position', new THREE.BufferAttribute(emberPos, 3));
+const sparkCanvas = document.createElement('canvas');
+sparkCanvas.width = sparkCanvas.height = 64;
+const sctx = sparkCanvas.getContext('2d');
+const sg = sctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+sg.addColorStop(0, 'rgba(255,255,255,1)');
+sg.addColorStop(0.3, 'rgba(255,180,60,0.8)');
+sg.addColorStop(1, 'rgba(0,0,0,0)');
+sctx.fillStyle = sg; sctx.fillRect(0, 0, 64, 64);
+const sparkTex = new THREE.CanvasTexture(sparkCanvas);
+const emberMat = new THREE.PointsMaterial({
+  color: 0xff8030, size: 0.05, transparent: true, opacity: 1,
+  blending: THREE.AdditiveBlending, depthWrite: false, map: sparkTex,
+});
+const emberPoints = new THREE.Points(emberGeo, emberMat);
+scene.add(emberPoints);
+
+// SMOKE — soft cloud particles forming a proper plume (not glowing dots)
+function makeSmokeTexture() {
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = 128;
+  const c = cv.getContext('2d');
+  // Very soft radial gradient — gradual falloff, not the bright spark gradient
+  const g = c.createRadialGradient(64, 64, 0, 64, 64, 60);
+  g.addColorStop(0,    'rgba(255,255,255,0.45)');
+  g.addColorStop(0.35, 'rgba(255,255,255,0.22)');
+  g.addColorStop(0.65, 'rgba(255,255,255,0.07)');
+  g.addColorStop(1,    'rgba(255,255,255,0)');
+  c.fillStyle = g;
+  c.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(cv);
+}
+const smokeTex = makeSmokeTexture();
+
+const N_SMOKE = 80;
+const smokeGeo = new THREE.BufferGeometry();
+const smokePos = new Float32Array(N_SMOKE * 3);
+const smokeData = [];
+for (let i = 0; i < N_SMOKE; i++) {
+  smokePos[i*3] = (Math.random() - 0.5) * 0.3;
+  smokePos[i*3+1] = 4.6 + Math.random() * 0.5;
+  smokePos[i*3+2] = (Math.random() - 0.5) * 0.3;
+  smokeData.push({
+    speed: 0.18 + Math.random() * 0.35,
+    seed: i + Math.random() * 5,
+    x0: smokePos[i*3], z0: smokePos[i*3+2],
+  });
+}
+smokeGeo.setAttribute('position', new THREE.BufferAttribute(smokePos, 3));
+const smokeMat = new THREE.PointsMaterial({
+  color: 0x707074,            // gray with slight cool tint
+  size: 1.6,                  // LARGE — particles overlap into cloud
+  sizeAttenuation: true,
+  transparent: true,
+  opacity: 0.28,              // lower per-particle so overlap blends
+  blending: THREE.NormalBlending,
+  depthWrite: false,
+  map: smokeTex,              // soft cloud texture, not spark
+});
+const smokePoints = new THREE.Points(smokeGeo, smokeMat);
+scene.add(smokePoints);
+
+// ============== POSTPROCESSING ==============
+// Performance pass: render postprocessing at HALF resolution where possible.
+// SSAO at half-res is the single biggest win — 4x fewer rays per frame.
+// Bloom at half-res is identical to full-res visually (it's a blur anyway).
+// Final SMAA + OutputPass run at full res to keep edges crisp.
+setStage('POSTPROCESSING');
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const HALF_W = Math.floor(window.innerWidth  / 2);
+const HALF_H = Math.floor(window.innerHeight / 2);
+const ssao = new SSAOPass(scene, camera, HALF_W, HALF_H);
+ssao.kernelRadius = 0.4; ssao.minDistance = 0.005; ssao.maxDistance = 0.05;
+composer.addPass(ssao);
+// Bloom — half-res Gaussian blur is visually identical to full-res
+const bloom = new UnrealBloomPass(new THREE.Vector2(HALF_W, HALF_H), 0.4, 0.4, 0.96);
+composer.addPass(bloom);
+const smaa = new SMAAPass(window.innerWidth, window.innerHeight);
+composer.addPass(smaa);
+composer.addPass(new OutputPass());
+
+// ============== CSS2D OVERLAY for anatomical labels ==============
+const labelsLayer = document.createElement('div');
+labelsLayer.id = 'labels-layer';
+document.body.appendChild(labelsLayer);
+const labelRenderer = new CSS2DRenderer({ element: labelsLayer });
+labelRenderer.setSize(window.innerWidth, window.innerHeight);
+
+function addLabel(text, hebrew, position) {
+  const div = document.createElement('div');
+  div.className = 'anat-label';
+  div.innerHTML = text + (hebrew ? `<span class="he">${hebrew}</span>` : '');
+  const obj = new CSS2DObject(div);
+  obj.position.set(...position);
+  obj.visible = false;  // hidden until cross-section ON
+  interiorGroup.add(obj);
+  return obj;
+}
+
+// 15 anatomical labels positioned near each part
+const anatomyLabels = [
+  addLabel('Custom Chimney Cap',     '',  [1.2, 4.0,  0.5]),
+  addLabel('Hip-roof + Ridge Caps',   '', [-1.2, 4.1, 0.3]),
+  addLabel('Mesh Spark Arrestor',     '', [1.4, 3.65, 0.4]),
+  addLabel('Clay Flue Tile',          '', [0.4, 2.7,  0.3]),
+  addLabel('Stainless Liner',         '', [-0.4, 2.0, 0.3]),
+  addLabel('Insulation Wrap',         '', [0.5, 1.2,  0.3]),
+  addLabel('Concrete Crown',          '', [-1.0, 3.5, 0.3]),
+  addLabel('Brick Body (continuous)', '', [1.5, 1.7,  0.3]),
+  addLabel('Corbeled Smoke Chamber',  '', [-0.8, -0.7, 0.4]),
+  addLabel('Cast Iron Damper',        '', [0.9, -1.0, 0.6]),
+  addLabel('Damper Handle',           '', [0.9, -1.15,0.65]),
+  addLabel('Smoke Shelf',             '', [-1.0, -1.08,-0.4]),
+  addLabel('Steel Angle Lintel',      '', [1.1, -0.85,0.7]),
+  addLabel('Wood Mantle + Corbels',   '', [1.4, -0.25,0.9]),
+  addLabel('Stone Hearth',            '', [1.7, -2.3, 1.4]),
+  addLabel('Refractory Firebrick',    'firebrick',           [-0.7, -2.1, 0.4]),
+  addLabel('Concrete Foundation',     '', [ 1.5, -2.85,0.7]),
+  addLabel('Roof Flashing',           '', [-1.4, -1.92,0.4]),
+  // Gas system labels
+  addLabel('Stainless Burner Tube',   '', [ 0.6, -2.05,0.45]),
+  addLabel('Cast-Iron Log Grate',     '', [ 0.6, -2.00,0.50]),
+  addLabel('Pilot + Thermocouple',    '', [-0.7, -2.00,0.50]),
+  addLabel('Millivolt Gas Valve',     '', [-1.6, -2.10,0.55]),
+  addLabel('Manual Ball Shutoff',     '', [-1.6, -2.00,0.20]),
+  addLabel('Yellow CSST Flex Line',   '', [-1.4, -2.00,0.55]),
+];
+
+// ============== AIRFLOW INDICATOR PARTICLES (smoke path: firebox → throat → flue → cap) ==============
+const N_AIRFLOW = 40;
+const airflowGeo = new THREE.BufferGeometry();
+const airflowPos = new Float32Array(N_AIRFLOW * 3);
+const airflowData = [];
+for (let i = 0; i < N_AIRFLOW; i++) {
+  airflowPos[i*3] = (Math.random() - 0.5) * 0.20;
+  airflowPos[i*3+1] = -1.8;
+  airflowPos[i*3+2] = (Math.random() - 0.5) * 0.20;
+  airflowData.push({
+    seed: i * 0.7 + Math.random(),
+    speed: 0.4 + Math.random() * 0.5,
+  });
+}
+airflowGeo.setAttribute('position', new THREE.BufferAttribute(airflowPos, 3));
+const airflowMat = new THREE.PointsMaterial({
+  color: 0xffe0a0, size: 0.08, transparent: true, opacity: 0,
+  blending: THREE.AdditiveBlending, depthWrite: false, map: sparkTex,
+});
+const airflowPoints = new THREE.Points(airflowGeo, airflowMat);
+interiorGroup.add(airflowPoints);
+
+// ============== INTERIOR LIGHTING (illuminates the cavity in cross-section) ==============
+const interiorLights = [];
+// Light inside the smoke chamber
+const chamberLight = new THREE.PointLight(0xfff0d0, 0, 3, 1.5);
+chamberLight.position.set(0, -0.7, 0);
+interiorGroup.add(chamberLight);
+interiorLights.push(chamberLight);
+// Light inside the flue (mid-height)
+const flueLight = new THREE.PointLight(0xeae0c0, 0, 4, 1.6);
+flueLight.position.set(0, 2.0, 0);
+interiorGroup.add(flueLight);
+interiorLights.push(flueLight);
+// Light inside the ash pit
+const ashLight = new THREE.PointLight(0xffe5a0, 0, 2, 1.5);
+ashLight.position.set(0, -2.5, 0);
+interiorGroup.add(ashLight);
+interiorLights.push(ashLight);
+
+// ============== UI ==============
+let isRotate = false, isFire = true, isBloom = true, isSSAO = true, isSection = false;
+const $ = (id) => document.getElementById(id);
+const PRESETS = {
+  'hero':           { pos: [4.5, 0.2, 5.5],  tgt: [0, -0.8, 0] },
+  'three-quarter':  { pos: [6, 1.0, 7],      tgt: [0, 0.5, 0] },
+  'front':          { pos: [0, -0.6, 6.5],   tgt: [0, -1.0, 0] },
+  'firebox':        { pos: [1.8, -1.0, 3.5], tgt: [0, -1.6, 0] },
+  'cap':            { pos: [2.5, 5.3, 2.5],  tgt: [0, 5.0, 0] },
+  'cinema':         { pos: [3.5, -1.5, 4.5], tgt: [0, 0.5, 0] },
+};
+function applyPreset(name) {
+  const p = PRESETS[name]; if (!p) return;
+  document.querySelectorAll('#presets button').forEach(b => b.classList.toggle('active', b.dataset.preset === name));
+  const startPos = camera.position.clone();
+  const startTgt = controls.target.clone();
+  const endPos = new THREE.Vector3(...p.pos);
+  const endTgt = new THREE.Vector3(...p.tgt);
+  let t = 0; const dur = 800; const t0 = performance.now();
+  function tick() {
+    const now = performance.now();
+    t = Math.min(1, (now - t0) / dur);
+    const e = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
+    camera.position.lerpVectors(startPos, endPos, e);
+    controls.target.lerpVectors(startTgt, endTgt, e);
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  tick();
+}
+document.querySelectorAll('#presets button').forEach(b => b.onclick = () => applyPreset(b.dataset.preset));
+$('t-rotate').onclick = () => { isRotate = !isRotate; controls.autoRotate = isRotate; controls.autoRotateSpeed = 0.3; $('t-rotate').classList.toggle('active', isRotate); };
+
+// ============== AUTO-TAG: infer part for any mesh that wasn't tagged at creation ==============
+function inferPart(mesh) {
+  if (!mesh.geometry) return null;
+  const bbox = new THREE.Box3().setFromObject(mesh);
+  if (bbox.isEmpty()) return null;
+  const c = new THREE.Vector3();
+  bbox.getCenter(c);
+  const ax = Math.abs(c.x), az = Math.abs(c.z);
+
+  // Narrow centerline = flue components (most specific first)
+  if (ax < 0.18 && az < 0.18 && c.y > -0.55 && c.y < 3.50) {
+    return (ax < 0.13 && az < 0.13) ? 'flueLiner' : 'flueTiles';
+  }
+  // Cap (above crown)
+  if (c.y > 3.38) return 'cap';
+  // Roof flashing + roof + cricket (everything around y=1.3-2.1 in the chimney roofline zone)
+  if (c.y > 1.10 && c.y < 2.10 && (ax > 0.5 || az > 0.5)) return 'flashing';
+  // Mantle (wood shelf area, wider X)
+  if (c.y > -0.80 && c.y < -0.05 && ax < 1.3) return 'mantle';
+  // Stone lintel + steel angle (band above firebox opening)
+  if (c.y > -1.05 && c.y < -0.85 && (c.z > 0.30 || ax > 0.45)) return 'lintel';
+  // Damper (at throat, very narrow Z range, must be near firebox center)
+  if (c.y > -1.10 && c.y < -0.95 && ax < 0.55 && c.z > -0.05 && c.z < 0.40) return 'damper';
+  // Smoke chamber (corbels above damper, below mantle)
+  if (c.y > -1.00 && c.y < -0.45 && ax < 0.7) return 'smokeChamber';
+  // Cleanout (side-mounted at base, x < 0)
+  if (c.x < -0.85 && c.y > -2.70 && c.y < -2.25) return 'cleanout';
+  // Hearth (wide low slab)
+  if (c.y > -2.55 && c.y < -2.20 && (ax > 0.7 || az > 0.7)) return 'hearth';
+  // Ash pit (below firebox, inside chimney footprint)
+  if (c.y > -2.70 && c.y < -2.20 && ax < 0.8) return 'ashPit';
+  // Foundation (deepest)
+  if (c.y < -2.55) return 'foundation';
+  // Firebox (refractory interior)
+  if (c.y > -2.20 && c.y < -1.00) return 'firebox';
+  // Body brick mass
+  if (c.y > -0.50 && c.y < 3.38 && ax < 1.1) return 'body';
+  // Room background (floor / back wall)
+  if (c.z < -0.5) return 'room';
+  return null;
+}
+
+root.traverse(o => {
+  if (o.isMesh && !o.userData.part) {
+    const inferred = inferPart(o);
+    if (inferred) o.userData.part = inferred;
+  }
+});
+
+// CLONE shared materials per-mesh so X-ray opacity changes don't bleed across meshes.
+// Without this, when castIron is shared between damper/cleanout/ashGrate, changing
+// opacity on one affects all (last traversed mesh wins). After cloning, each mesh
+// has its own material instance, so X-ray fades work per-part.
+// We also tag each clone with userData.origMat = original so cross-section toggle
+// can find which clones to apply clippingPlanes to (otherwise modifying MAT[key]
+// has no effect on the clones).
+function cloneAndTag(m) {
+  const c = m.clone();
+  c.userData.origMat = m;
+  return c;
+}
+root.traverse(o => {
+  if (o.isMesh && o.material) {
+    if (Array.isArray(o.material)) {
+      o.material = o.material.map(cloneAndTag);
+    } else {
+      o.material = cloneAndTag(o.material);
+    }
+  }
+});
+
+// GHOST MESHES — for cross-section mode, build a clone of every clippable mesh
+// with INVERTED clip plane + 10% opacity. When section is on, the original mesh
+// shows the cut half; the ghost shows a faint outline of the cut-away half.
+function makeGhostMat(orig) {
+  const g = orig.clone();
+  g.transparent = true;
+  g.opacity = 0.10;
+  g.depthWrite = false;
+  g.clipShadows = false;
+  g.side = THREE.DoubleSide;
+  g.needsUpdate = true;
+  return g;
+}
+const CLIP_MATS_SET = new Set(CLIP_MATS.map(k => MAT[k]).filter(Boolean));
+const ghostClipPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
+const ghostMeshes = [];
+root.traverse(o => {
+  if (!o.isMesh || !o.material || o.userData.isGhost) return;
+  const matsArr = Array.isArray(o.material) ? o.material : [o.material];
+  // Only ghost meshes whose source material is in CLIP_MATS_SET
+  if (!matsArr.some(m => m.userData && CLIP_MATS_SET.has(m.userData.origMat))) return;
+  const ghost = o.clone();
+  ghost.geometry = o.geometry;            // share geometry (no need to duplicate)
+  ghost.material = Array.isArray(o.material)
+    ? o.material.map(m => {
+        const g = makeGhostMat(m);
+        g.clippingPlanes = [ghostClipPlane];
+        return g;
+      })
+    : (() => {
+        const g = makeGhostMat(o.material);
+        g.clippingPlanes = [ghostClipPlane];
+        return g;
+      })();
+  ghost.visible = false;
+  ghost.castShadow = false;
+  ghost.receiveShadow = false;
+  ghost.userData.isGhost = true;
+  o.parent.add(ghost);
+  ghostMeshes.push(ghost);
+});
+
+// ============== INTERIOR VISIBILITY HELPER ==============
+// Parts that live inside interiorGroup — when X-rayed, we need interiorGroup visible
+const INTERIOR_PARTS = ['flueTiles','flueLiner','smokeChamber','damper','lintel','ashPit','cleanout','foundation','flashing'];
+function updateInteriorVis() {
+  const showInterior = isSection || (xrayPart && INTERIOR_PARTS.includes(xrayPart));
+  interiorGroup.visible = showInterior;
+  const showContext = (xrayPart === 'flashing');
+  interiorGroup.traverse(o => {
+    // Context-only meshes (roof, cricket, fascia, ridge cap) — only on flashing X-ray
+    if (o.userData?.contextOnly) o.visible = showContext;
+    // Cross-section-only meshes (insulation) — only when cross-section is active, never in X-ray
+    if (o.userData?.crossSectionOnly) o.visible = isSection;
+  });
+  anatomyLabels.forEach(lbl => lbl.visible = isSection);
+  interiorLights.forEach(light => light.intensity = isSection ? 2.5 : 0);
+}
+
+// ============== AUTO-CAMERA per part (centered + good angle) ==============
+const PART_CAMERAS = {
+  cap:          { pos: [4.0, 4.7, 4.0], tgt: [0, 4.0, 0] },
+  flueTiles:    { pos: [4.2, 1.5, 3.0], tgt: [0, 1.5, 0] },
+  flueLiner:    { pos: [3.8, 1.7, 2.8], tgt: [0, 1.7, 0] },
+  smokeChamber: { pos: [3.0, -0.4, 2.8], tgt: [0, -0.7, 0] },
+  damper:       { pos: [1.4, -0.2, 1.8], tgt: [0, -1.00, 0.05] },
+  lintel:       { pos: [2.6, -0.7, 2.6], tgt: [0, -0.9, 0.4] },
+  firebox:      { pos: [0.5, -1.0, 4.0], tgt: [0, -1.6, 0] },
+  fire:         { pos: [0.8, -1.4, 3.0], tgt: [0, -1.8, 0.3] },
+  mantle:       { pos: [0.5, -0.1, 3.8], tgt: [0, -0.3, 0.5] },
+  body:         { pos: [5.5, 1.6, 5.5], tgt: [0, 1.6, 0] },
+  hearth:       { pos: [0.5, -1.6, 4.5], tgt: [0, -2.35, 0.6] },
+  ashPit:       { pos: [3.0, -2.2, 3.0], tgt: [0, -2.45, 0] },
+  cleanout:     { pos: [-3.8, -2.2, 2.8], tgt: [-1.0, -2.45, 0.0] },
+  // Gas-specific cameras
+  burner:       { pos: [1.4, -1.5, 2.2], tgt: [0, -2.05, 0.12] },
+  grate:        { pos: [1.4, -1.5, 2.2], tgt: [0, -2.02, 0.12] },
+  pilot:        { pos: [-1.8, -1.5, 2.0], tgt: [-0.33, -2.02, 0.32] },
+  gasValve:     { pos: [-2.8, -1.7, 2.0], tgt: [-1.18, -2.12, 0.40] },
+  gasLine:      { pos: [-3.2, -1.8, 2.0], tgt: [-1.40, -2.05, 0.40] },
+  foundation:   { pos: [3.5, -2.6, 3.5], tgt: [0, -2.85, 0] },
+  flashing:     { pos: [6.0, 5.5, 6.5], tgt: [0, 2.7, -0.5] },
+  room:         { pos: [6.5, 1.0, 7.5], tgt: [0, 0.5, 0] },
+};
+// Smooth cinematic camera move along a Bezier arc (not linear teleport).
+// Camera traces an arc that rises slightly + pulls back from the model at the midpoint,
+// like a drone flyover. Uses ease-in-out-quart for ultra-smooth start/stop.
+let _camAnim = null;
+function animateCameraTo(pos, tgt, dur = 1400) {
+  // Cancel any in-flight animation
+  if (_camAnim !== null) cancelAnimationFrame(_camAnim);
+  const startPos = camera.position.clone();
+  const startTgt = controls.target.clone();
+  const endPos = new THREE.Vector3(...pos);
+  const endTgt = new THREE.Vector3(...tgt);
+
+  // Compute midpoint: halfway, lifted up + pulled back from target for an arc
+  const midPos = startPos.clone().lerp(endPos, 0.5);
+  const dist = startPos.distanceTo(endPos);
+  midPos.y += dist * 0.18;
+  // Pull midpoint outward radially from the midTgt (drone-arc effect)
+  const midTgt = startTgt.clone().lerp(endTgt, 0.5);
+  const outward = midPos.clone().sub(midTgt).normalize();
+  midPos.addScaledVector(outward, dist * 0.25);
+
+  // Disable OrbitControls during animation so damping doesn't fight us
+  const wasEnabled = controls.enabled;
+  controls.enabled = false;
+  const t0 = performance.now();
+
+  function tick() {
+    const now = performance.now();
+    const t = Math.min(1, (now - t0) / dur);
+    // Ease-in-out-quart (much smoother than cubic)
+    const e = t < 0.5 ? 8*t*t*t*t : 1 - Math.pow(-2*t + 2, 4)/2;
+    // Quadratic Bezier for camera position (start → mid → end)
+    const u = 1 - e;
+    camera.position.set(
+      u*u * startPos.x + 2*u*e * midPos.x + e*e * endPos.x,
+      u*u * startPos.y + 2*u*e * midPos.y + e*e * endPos.y,
+      u*u * startPos.z + 2*u*e * midPos.z + e*e * endPos.z,
+    );
+    // Linear lerp for target (cleaner gaze transition than arc)
+    controls.target.lerpVectors(startTgt, endTgt, e);
+    if (t < 1) {
+      _camAnim = requestAnimationFrame(tick);
+    } else {
+      _camAnim = null;
+      controls.enabled = wasEnabled;
+    }
+  }
+  _camAnim = requestAnimationFrame(tick);
+}
+
+// ============== X-RAY PART SELECTOR ==============
+let xrayPart = null;
+function setXRay(part) {
+  xrayPart = part || null;
+  // Auto-show interior if X-raying an interior part
+  updateInteriorVis();
+  // Auto-move camera to a centered, well-framed view for this part
+  if (xrayPart && PART_CAMERAS[xrayPart]) {
+    const { pos, tgt } = PART_CAMERAS[xrayPart];
+    if (isRotate) { isRotate = false; controls.autoRotate = false; $('t-rotate').classList.remove('active'); }
+    animateCameraTo(pos, tgt, 1400);
+    // X-ray light follows the selected part — illuminates it brightly
+    xrayLight.position.set(tgt[0], tgt[1] + 0.4, tgt[2] + 0.5);
+    xrayLight.intensity = 4.5;
+  } else {
+    xrayLight.intensity = 0;
+  }
+
+  // Hide flames + dim fire light when X-ray is on anything other than fire/firebox
+  // (Fire is additive-blended so it dominates the scene even at low opacity)
+  const fireRelevant = !xrayPart || xrayPart === 'fire' || xrayPart === 'firebox';
+  if (typeof flameAll !== 'undefined') {
+    flameAll.forEach(f => f.visible = fireRelevant && isFire);
+  }
+  if (typeof coals !== 'undefined') {
+    coals.forEach(c => c.visible = fireRelevant && isFire);
+  }
+  if (typeof fireLight !== 'undefined') {
+    fireLight.userData.dimForXray = !fireRelevant;
+  }
+  // Update button UI
+  document.querySelectorAll('#xray-panel button').forEach(b => {
+    b.classList.toggle('active', (b.dataset.part || '') === (xrayPart || ''));
+  });
+  // Traverse scene & adjust materials
+  scene.traverse(o => {
+    if (!o.isMesh || !o.material) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    mats.forEach(m => {
+      // Save originals once (opacity + transparent + depthWrite + emissive)
+      if (m.userData.origOpacity === undefined) {
+        m.userData.origOpacity = m.opacity ?? 1;
+        m.userData.origTransparent = m.transparent ?? false;
+        m.userData.origDepthWrite = m.depthWrite ?? true;
+        if (m.emissive) {
+          m.userData.origEmissive = m.emissive.getHex();
+          m.userData.origEmissiveInt = m.emissiveIntensity ?? 1;
+        }
+      }
+      if (!xrayPart) {
+        // Reset everything to original
+        m.opacity = m.userData.origOpacity;
+        m.transparent = m.userData.origTransparent;
+        m.depthWrite = m.userData.origDepthWrite;
+        if (m.emissive && m.userData.origEmissive !== undefined) {
+          m.emissive.setHex(m.userData.origEmissive);
+          m.emissiveIntensity = m.userData.origEmissiveInt;
+        }
+      } else {
+        const isSelected = (o.userData.part === xrayPart);
+        if (isSelected) {
+          m.opacity = m.userData.origOpacity;
+          m.transparent = m.userData.origTransparent;
+          m.depthWrite = m.userData.origDepthWrite;
+          // Cool emissive accent — adds visibility for ALL selected parts (including metals)
+          // Cool blue-gray reads as "highlight" without conflicting with PBR reflections
+          if (m.emissive && m.userData.origEmissive === 0) {
+            m.emissive.setHex(0x2a3848);  // cool blue-gray accent
+            m.emissiveIntensity = 0.6;
+          }
+        } else {
+          // Fade to X-ray
+          m.opacity = 0.08;
+          m.transparent = true;
+          m.depthWrite = false;
+          if (m.emissive && m.userData.origEmissive !== undefined) {
+            m.emissive.setHex(m.userData.origEmissive);  // keep original
+            m.emissiveIntensity = m.userData.origEmissiveInt * 0.3;  // dim it
+          }
+        }
+      }
+      m.needsUpdate = true;
+    });
+  });
+}
+// Wire all xray buttons
+document.querySelectorAll('#xray-panel button').forEach(b => {
+  b.onclick = () => setXRay(b.dataset.part || null);
+});
+
+// Raycaster click-on-3D-part DISABLED — only panel buttons activate X-ray.
+// (Raycaster had issues with overlapping geometry / first-hit logic.)
+
+$('t-section').onclick = () => {
+  isSection = !isSection;
+  $('t-section').classList.toggle('active', isSection);
+  // Apply / remove clipping plane — for both the original MAT entries AND every
+  // per-mesh CLONED material (we tagged them with userData.origMat at clone time).
+  // Without traversing clones, clipping has no effect on rendered meshes.
+  for (const key of CLIP_MATS) {
+    if (!MAT[key]) continue;
+    MAT[key].clippingPlanes = isSection ? [clipPlane] : null;
+    MAT[key].clipShadows = isSection;
+    MAT[key].needsUpdate = true;
+  }
+  root.traverse(o => {
+    if (!o.isMesh || !o.material || o.userData.isGhost) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    mats.forEach(m => {
+      if (m.userData && CLIP_MATS_SET.has(m.userData.origMat)) {
+        m.clippingPlanes = isSection ? [clipPlane] : null;
+        m.clipShadows = isSection;
+        m.needsUpdate = true;
+      }
+    });
+  });
+  // Toggle the 10%-opacity ghost copies (they show what was clipped away)
+  ghostMeshes.forEach(g => { g.visible = isSection; });
+  // Update visibility — interiorGroup visible if cross-section OR X-ray on interior part
+  updateInteriorVis();
+  // Auto-move camera: far enough to see whole height + width, slight left-front for cutaway viz
+  if (isSection) {
+    const startPos = camera.position.clone();
+    const startTgt = controls.target.clone();
+    const endPos = new THREE.Vector3(-1.5, 1.8, 11.5);
+    const endTgt = new THREE.Vector3(0.4, 1.5, 0);
+    let t = 0; const dur = 900; const t0 = performance.now();
+    function tick() {
+      const now = performance.now();
+      t = Math.min(1, (now - t0) / dur);
+      const e = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
+      camera.position.lerpVectors(startPos, endPos, e);
+      controls.target.lerpVectors(startTgt, endTgt, e);
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    tick();
+  }
+};
+$('t-fire').onclick = () => {
+  isFire = !isFire;
+  flameAll.forEach(f => f.visible = isFire);
+  emberPoints.visible = isFire;
+  coals.forEach(c => c.visible = isFire);
+  fireLight.intensity = isFire ? 8 : 0;
+  $('t-fire').classList.toggle('active', isFire);
+};
+$('t-bloom').onclick = () => { isBloom = !isBloom; bloom.enabled = isBloom; $('t-bloom').classList.toggle('active', isBloom); };
+$('t-ssao').onclick = () => { isSSAO = !isSSAO; ssao.enabled = isSSAO; $('t-ssao').classList.toggle('active', isSSAO); };
+$('t-fullscreen').onclick = () => { if (!document.fullscreenElement) document.body.requestFullscreen(); else document.exitFullscreen(); };
+document.addEventListener('keydown', (e) => {
+  if (e.key >= '1' && e.key <= '6') {
+    const names = ['hero', 'three-quarter', 'front', 'firebox', 'cap', 'cinema'];
+    applyPreset(names[parseInt(e.key)-1]);
+  } else if (e.key.toLowerCase() === 'r') $('t-rotate').click();
+  else if (e.key.toLowerCase() === 'f') $('t-fullscreen').click();
+});
+
+// Stats
+let totalVerts = 0, totalTris = 0;
+root.traverse(o => {
+  if (o.isMesh && o.geometry) {
+    const v = o.geometry.attributes.position?.count || 0;
+    const t = (o.geometry.index ? o.geometry.index.count/3 : v/3);
+    totalVerts += v; totalTris += Math.floor(t);
+  }
+});
+$('geom-stat').textContent = `${totalVerts.toLocaleString()} v · ${totalTris.toLocaleString()} t`;
+
+setStage('READY');
+setTimeout(() => {
+  const ld = document.getElementById('loading');
+  ld.style.transition = 'opacity 0.4s';
+  ld.style.opacity = '0';
+  setTimeout(() => ld.style.display = 'none', 450);
+}, 500);
+
+let frameCount = 0, lastFps = performance.now();
+function animate() {
+  requestAnimationFrame(animate);
+  const t = performance.now() / 1000;
+  if (isFire) {
+    const flick = Math.sin(t * 11) * 0.9 + Math.sin(t * 7.3) * 0.6 + Math.sin(t * 23) * 0.3;
+    // Dim fire light substantially when X-ray is on a non-fire part
+    fireLight.intensity = (fireLight.userData.dimForXray ? 0.8 : 7) + flick * (fireLight.userData.dimForXray ? 0.2 : 1);
+    // Drive each flame layer at slightly different speeds for organic look
+    flameAll.forEach((f, i) => {
+      if (f.userData.shader) f.userData.shader.uniforms.uTime.value = t * (1 + i * 0.07);
+    });
+    // 5 logs — pulsing emissive on undersides
+    [log1, log2, log3, log4, log5].forEach((l, i) => {
+      if (l && l.material) l.material.emissiveIntensity = 0.6 + Math.sin(t * 4 + i * 1.3) * 0.35;
+    });
+    // Coal bed — each coal pulses independently
+    coals.forEach(c => {
+      const base = c.userData.pulseBase;
+      const seed = c.userData.pulseSeed;
+      c.material.emissiveIntensity = base + Math.sin(t * 3 + seed) * 0.6 + Math.sin(t * 7 + seed * 1.5) * 0.3;
+    });
+    // Gas jets — fast flicker on each port for realistic gas flame anchor
+    if (typeof gasJets !== 'undefined') {
+      gasJets.forEach(j => {
+        if (!j.material) return;
+        const s = j.userData.jetGlowSeed || 0;
+        j.material.emissiveIntensity = 0.5 + Math.sin(t * 9 + s) * 0.3 + Math.sin(t * 15 + s * 1.4) * 0.15;
+      });
+    }
+  }
+  const ePos = emberGeo.attributes.position.array;
+  for (let i = 0; i < N_EMBERS; i++) {
+    const d = emberData[i];
+    // Phase range 5.6 so embers rise the FULL height from firebox (y=-2.0) all the
+    // way out the cap (y≈3.6), not stopping halfway up the shaft.
+    const phase = (t * d.speed + d.seed) % 5.6;
+    const yWorld = -2.0 + phase;
+    // Narrow the horizontal spread once the embers enter the flue (above y=-0.5)
+    // so they look funneled through the chimney, not floating outside the brick.
+    const narrow = yWorld > -0.5;
+    const spreadX = narrow ? 0.02 : 0.08;
+    const spreadZ = narrow ? 0.02 : 0.05;
+    const xJitter = narrow ? Math.sin(t * 0.8 + d.seed) * spreadX : Math.sin(t * 0.8 + d.seed) * spreadX;
+    const zJitter = narrow ? Math.cos(t * 0.6 + d.seed) * spreadZ : Math.cos(t * 0.6 + d.seed) * spreadZ;
+    ePos[i*3]   = (narrow ? 0 : d.x0) + xJitter;
+    ePos[i*3+1] = yWorld;
+    ePos[i*3+2] = (narrow ? 0 : d.z0) + zJitter;
+  }
+  emberGeo.attributes.position.needsUpdate = true;
+
+  // Smoke — rises and SPREADS HORIZONTALLY as it ascends (proper plume widening)
+  const sPos = smokeGeo.attributes.position.array;
+  for (let i = 0; i < N_SMOKE; i++) {
+    const d = smokeData[i];
+    const phase = (t * d.speed + d.seed) % 6;
+    const spread = 0.2 + phase * 0.35;  // widen as smoke rises
+    sPos[i*3]   = d.x0 + Math.sin(t * 0.3 + d.seed) * spread;
+    sPos[i*3+1] = 4.6 + phase;
+    sPos[i*3+2] = d.z0 + Math.cos(t * 0.25 + d.seed * 1.3) * spread * 0.8;
+  }
+  smokeGeo.attributes.position.needsUpdate = true;
+
+  // Animate airflow particles when cross-section is on (smoke path through chimney)
+  if (isSection) {
+    airflowMat.opacity = 0.55;
+    const ap = airflowGeo.attributes.position.array;
+    for (let i = 0; i < N_AIRFLOW; i++) {
+      const d = airflowData[i];
+      // Loop: rise from firebox (-1.8) to cap base (3.2), total 5m, speed-modulated
+      const phase = (t * d.speed + d.seed) % 1.0;
+      const yWorld = -1.8 + phase * 5.0;
+      // Lateral spread: wider in firebox/chamber, tight in flue
+      let spreadX = 0.4, spreadZ = 0.4;
+      if (yWorld > -0.45) { spreadX = 0.13; spreadZ = 0.13; }  // inside flue
+      if (yWorld > 3.0) { spreadX = 0.6; spreadZ = 0.3; }       // exit at cap
+      ap[i*3]   = Math.sin(t * 0.7 + d.seed) * spreadX * 0.7;
+      ap[i*3+1] = yWorld;
+      ap[i*3+2] = Math.cos(t * 0.6 + d.seed) * spreadZ * 0.7;
+    }
+    airflowGeo.attributes.position.needsUpdate = true;
+  } else {
+    airflowMat.opacity = 0;
+  }
+
+  controls.update();
+  composer.render();
+  labelRenderer.render(scene, camera);
+
+  // After the first ~3 frames the static-scene shadow map is fully populated.
+  // Lock it from re-rendering every frame — the chimney never moves, so its
+  // shadows never change. Huge per-frame win (only fire-light intensity flicker
+  // continues, which doesn't need shadow updates).
+  if (frameCount === 3) renderer.shadowMap.autoUpdate = false;
+
+  frameCount++;
+  const now = performance.now();
+  if (now - lastFps > 500) {
+    $('fps-val').textContent = (frameCount * 1000 / (now - lastFps)).toFixed(0);
+    frameCount = 0; lastFps = now;
+  }
+}
+animate();
+
+// Resize handler — debounce to avoid thrashing during a window drag, and keep
+// SSAO+bloom at half-res for the perf win.
+let _resizeT = null;
+window.addEventListener('resize', () => {
+  if (_resizeT) clearTimeout(_resizeT);
+  _resizeT = setTimeout(() => {
+    const w = window.innerWidth, h = window.innerHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+    composer.setSize(w, h);
+    ssao.setSize(Math.floor(w / 2), Math.floor(h / 2));
+    bloom.setSize(Math.floor(w / 2), Math.floor(h / 2));
+    smaa.setSize(w, h);
+    labelRenderer.setSize(w, h);
+  }, 120);
+});
+
+// ============================================================================
+//  UNIFIED INTEGRATION  —  mode toggle (wood/gas) · URL params · embed mode ·
+//  part info + service CTA · pre-baked camera views.
+// ============================================================================
+
+// ---- Part info database (titles + descriptions + issues + service CTAs) ----
+const PART_INFO = {
+  cap:          { title: 'Custom Chimney Cap',  desc: 'Custom-fabricated metal cap (bronze / stainless / copper) with hip roof + integrated spark arrestor mesh. Covers the entire crown — keeps out rain, animals, and embers while venting smoke. Built to the exact dimensions of your flue.', issues: 'Rust-through, blown off in storms, undersized for the flue, missing spark mesh, leaking around the flange.', book: '/contact-us?service=custom-cap' },
+  flueTiles:    { title: 'Clay Flue Tiles',     desc: 'Stacked rectangular ceramic liner inside the chimney — channels smoke and protects masonry from heat.', issues: 'Cracked tiles, gaps between courses, spalling.', book: '/contact-us?service=relining' },
+  flueLiner:    { title: 'Stainless Steel Liner', desc: 'Modern metal liner inserted inside the flue — required for many gas conversions and damaged masonry chimneys.', issues: 'Corrosion, sagging, undersized for appliance.', book: '/contact-us?service=liner-install' },
+  smokeChamber: { title: 'Smoke Chamber',       desc: 'Corbeled brick funnel above the firebox that gathers smoke and directs it into the flue.', issues: 'Creosote buildup, parge coating failure, gaps.', book: '/contact-us?service=parging' },
+  damper:       { title: 'Cast Iron Damper',    desc: 'Hinged plate at the throat that opens to vent smoke and closes when not in use to stop drafts.', issues: 'Rusted shut, broken handle, warped blade, missing.', book: '/contact-us?service=damper-repair' },
+  lintel:       { title: 'Steel Angle Lintel',  desc: 'L-shaped steel beam that supports the masonry above the firebox opening.', issues: 'Rust, sagging, no proper bearing.', book: '/contact-us?service=lintel-repair' },
+  firebox:      { title: 'Firebox + Refractory', desc: 'The combustion chamber lined with refractory firebrick rated for 2000°F+.', issues: 'Cracked firebrick, deteriorated mortar joints.', book: '/contact-us?service=firebox-rebuild' },
+  fire:         { title: 'Fire / Logs',         desc: 'Burning wood (wood mode) or decorative ceramic logs on a burner (gas mode).', issues: 'For wood: improper draft. For gas: yellow tipping flames, soot deposit.', book: '/contact-us?service=combustion-tuning' },
+  burner:       { title: 'Stainless Burner Tube', desc: 'Horizontal stainless pipe with drilled jet ports that delivers natural gas (or LP) for ignition.', issues: 'Clogged ports, corrosion, improper orifice for fuel.', book: '/contact-us?service=burner-replacement' },
+  grate:        { title: 'Cast-Iron Log Grate', desc: 'Decorative cradle that holds ceramic logs in place above the burner.', issues: 'Cracked iron, missing rungs, shifted out of position.', book: '/contact-us?service=grate-replacement' },
+  pilot:        { title: 'Pilot Assembly',      desc: 'Standing pilot light + thermocouple/thermopile safety sensor — proves flame to the gas valve.', issues: 'Pilot won\'t stay lit (bad thermocouple), dirty orifice, draft blowout.', book: '/contact-us?service=pilot-service' },
+  gasValve:     { title: 'Millivolt Gas Valve', desc: 'The OFF/PILOT/ON control valve that regulates gas flow to burner + pilot.', issues: 'Stuck knob, internal failure, leak at flanges.', book: '/contact-us?service=valve-replacement' },
+  gasLine:      { title: 'Gas Supply Line',     desc: 'Black iron pipe + drip leg + manual ball shutoff + yellow CSST flex into the appliance.', issues: 'Leaks at joints, missing drip leg, ungrounded CSST.', book: '/contact-us?service=gas-line-service' },
+  mantle:       { title: 'Wood Mantle + Corbels', desc: 'Decorative shelf above the firebox opening.', issues: 'Cracking, separation from wall, fire-code clearance violation.', book: '/contact-us?service=mantle-install' },
+  body:         { title: 'Brick Body',          desc: 'The unified brick shaft from firebox to crown.', issues: 'Spalling, cracking, leaning, missing mortar.', book: '/contact-us?service=tuckpointing' },
+  hearth:       { title: 'Stone Hearth',        desc: 'Non-combustible slab in front of the firebox — code minimum 16" front, 8" sides.', issues: 'Cracks, slipped tiles, undersized.', book: '/contact-us?service=hearth-repair' },
+  foundation:   { title: 'Concrete Foundation', desc: 'Reinforced footing beneath the chimney — sized to bear the full masonry load.', issues: 'Settling, cracking, frost heave.', book: '/contact-us?service=foundation-inspection' },
+  flashing:     { title: 'Roof Flashing',       desc: 'Layered metal (apron + step + counter + cricket) sealing the chimney-roof junction.', issues: 'Leaks, rust, missing kickout, no cricket on uphill side.', book: '/contact-us?service=flashing-replacement' },
+  room:         { title: 'Room (floor/wall)',   desc: 'Context elements — flooring + back wall.', issues: '—', book: '/contact-us' },
+};
+
+// ---- URL params ----
+const _params = new URLSearchParams(window.location.search);
+const URL_MODE  = (_params.get('mode')  || 'wood').toLowerCase();
+const URL_EMBED = _params.get('embed') === '1';
+const URL_PART  = _params.get('part') || null;
+const URL_VIEW  = _params.get('view') || null;
+const URL_AROT  = _params.get('autorotate') === '1';
+
+// ---- Mode toggle (wood vs gas) ----
+function setMode(m) {
+  const isGas = (m === 'gas');
+  // Toggle wood-only / gas-only MESHES in the 3D scene
+  root.traverse(o => {
+    if (o.userData.woodOnly) o.visible = !isGas;
+    if (o.userData.gasOnly)  o.visible =  isGas;
+  });
+  // Toggle X-Ray BUTTONS for mode-specific components (so the user can never click
+  // a part that doesn't exist in the current mode — e.g. no "Gas Valve" when in Wood).
+  document.querySelectorAll('#xray-panel button[data-modes]').forEach(btn => {
+    const allowedModes = btn.dataset.modes.split(',').map(s => s.trim());
+    btn.style.display = allowedModes.includes(m) ? '' : 'none';
+  });
+  // If the currently-selected X-Ray part is no longer available in this mode,
+  // clear it (revert to All Parts + close service CTA).
+  if (typeof xrayPart !== 'undefined' && xrayPart) {
+    const activeBtn = document.querySelector(`#xray-panel button[data-part="${xrayPart}"]:not([style*="display: none"])`);
+    if (!activeBtn) {
+      if (typeof window.setXRay === 'function') window.setXRay(null);
+    }
+  }
+  // Update Mode button styles
+  const wBtn = document.getElementById('m-wood');
+  const gBtn = document.getElementById('m-gas');
+  if (wBtn && gBtn) {
+    wBtn.style.background = isGas ? 'rgba(255,255,255,.06)' : '#C72B2B';
+    wBtn.style.color      = isGas ? '#f3f0eb' : '#fff';
+    wBtn.style.borderColor= isGas ? 'rgba(243,240,235,.18)' : '#C72B2B';
+    gBtn.style.background = isGas ? '#C72B2B' : 'rgba(255,255,255,.06)';
+    gBtn.style.color      = isGas ? '#fff' : '#f3f0eb';
+    gBtn.style.borderColor= isGas ? '#C72B2B' : 'rgba(243,240,235,.18)';
+  }
+  // Update info panel header
+  const h1 = document.querySelector('#info h1');
+  if (h1) h1.firstChild.textContent = isGas ? 'Gas Fireplace ' : 'Wood Fireplace ';
+  const v = document.querySelector('#info .v');
+  if (v) v.textContent = isGas ? 'GAS' : 'WOOD';
+  // Sync URL
+  const u = new URL(window.location);
+  u.searchParams.set('mode', m);
+  history.replaceState(null, '', u);
+}
+document.getElementById('m-wood').onclick = () => setMode('wood');
+document.getElementById('m-gas').onclick  = () => setMode('gas');
+
+// ---- Embed mode (clean look for iframe contexts) ----
+//   When embedded inline in a page card, NONE of the floating UI panels should
+//   show — the surrounding page already has its own header, copy, and CTAs.
+//   We strip everything visible except the canvas itself.
+function setEmbed(on) {
+  if (!on) return;
+  // Hide floor + back wall (scene context isn't needed inline)
+  if (typeof floor !== 'undefined') floor.visible = false;
+  if (typeof backWall !== 'undefined') backWall.visible = false;
+  // Hide EVERY floating panel — the host page owns the messaging.
+  ['info','presets','ctrls','fps','toolbar','xray-panel','mode-panel','service-cta'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  // Transparent canvas so the host page background bleeds through.
+  renderer.setClearColor(0x000000, 0);
+  scene.background = null;
+  document.body.style.background = 'transparent';
+  document.documentElement.style.background = 'transparent';
+  // Also disable the service CTA showing later (it's the only panel that can
+  // re-appear via showPartInfo() when a part is auto-selected via ?part=).
+  window._embedSuppressCTA = true;
+}
+
+// ---- Part info + service CTA (shown when X-Ray selects a part) ----
+function showPartInfo(part) {
+  // In embed mode the host page owns the CTA — never re-show ours.
+  if (window._embedSuppressCTA) return;
+  const cta = document.getElementById('service-cta');
+  if (!cta) return;
+  if (!part || !PART_INFO[part]) { cta.style.display = 'none'; return; }
+  const info = PART_INFO[part];
+  document.getElementById('sc-title').textContent  = info.title;
+  document.getElementById('sc-desc').textContent   = info.desc;
+  document.getElementById('sc-issues').textContent = info.issues;
+  document.getElementById('sc-book').href          = info.book;
+  cta.style.display = 'block';
+}
+// Hook into the existing setXRay function (wrap it)
+if (typeof setXRay === 'function') {
+  const _origSetXRay = setXRay;
+  window.setXRay = function(p) {
+    _origSetXRay(p);
+    showPartInfo(p);
+  };
+  document.querySelectorAll('#xray-panel button').forEach(b => {
+    b.onclick = () => window.setXRay(b.dataset.part || null);
+  });
+}
+// Close button on service CTA — clears X-Ray selection (reverts to All Parts)
+const _scClose = document.getElementById('sc-close');
+if (_scClose) {
+  _scClose.onclick = () => {
+    if (typeof window.setXRay === 'function') window.setXRay(null);
+    showPartInfo(null);
+  };
+}
+
+// When the viewer is loaded inside an iframe (i.e. embedded on the website),
+// the host page already provides its own title/copy/CTAs — so we hide the
+// duplicate info/ctrls/fps panels that only make sense in the standalone view.
+const _IN_IFRAME = (() => { try { return window.self !== window.top; } catch { return true; } })();
+if (_IN_IFRAME) {
+  ['info','ctrls','fps'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+}
+
+// ---- Apply URL params on load ----
+function enableAutoRotate() {
+  isRotate = true;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.4;        // slightly faster — more noticeable
+  document.getElementById('t-rotate')?.classList.add('active');
+}
+setTimeout(() => {
+  setMode(URL_MODE === 'gas' ? 'gas' : 'wood');
+  if (URL_EMBED) setEmbed(true);
+  // Apply view preset first (any preset click cancels auto-rotate internally)
+  if (URL_VIEW) {
+    const presetBtn = document.querySelector(`[data-preset="${URL_VIEW}"]`);
+    if (presetBtn) presetBtn.click();
+  }
+  // Apply part X-ray (camera animates to the part). Auto-rotate is re-enabled AFTER
+  // the camera reaches the part — otherwise setXRay would cancel it immediately.
+  if (URL_PART) {
+    setTimeout(() => {
+      window.setXRay?.(URL_PART);
+      if (URL_AROT) setTimeout(enableAutoRotate, 1600);   // wait for camera arc to finish
+    }, 600);
+  } else if (URL_AROT) {
+    // No part selected → safe to start auto-rotate immediately
+    enableAutoRotate();
+  }
+}, 100);
+</script>
+</body>
+</html>
